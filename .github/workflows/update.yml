@@ -11,6 +11,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: bouncie-update
@@ -31,7 +33,6 @@ jobs:
 
       - name: Fetch Bouncie data
         env:
-          BOUNCIE_API_KEY: ${{ secrets.BOUNCIE_API_KEY }}
           BOUNCIE_CLIENT_ID: ${{ secrets.BOUNCIE_CLIENT_ID }}
           BOUNCIE_CLIENT_SECRET: ${{ secrets.BOUNCIE_CLIENT_SECRET }}
           BOUNCIE_REDIRECT_URI: ${{ secrets.BOUNCIE_REDIRECT_URI }}
@@ -50,3 +51,18 @@ jobs:
             git commit -m "data: refresh $(date -u +'%Y-%m-%dT%H:%MZ')"
             git push
           fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: fetch
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
