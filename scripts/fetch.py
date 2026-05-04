@@ -114,7 +114,7 @@ def get_access_token() -> str:
 def api_get(token: str, path: str, params: dict | None = None) -> list | dict:
     resp = requests.get(
         f"{API_BASE}{path}",
-        headers={"Authorization": f"Bearer {token}"},
+        headers={"Authorization": token},  # Bouncie uses plain token, no Bearer prefix
         params=params,
         timeout=30,
     )
