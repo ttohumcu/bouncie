@@ -149,22 +149,24 @@ def update_vehicle_history(existing: list[dict], vehicles: list[dict]) -> list[d
             continue
         stats = v.get("stats") or {}
         loc = stats.get("location") or {}
+        model_obj = v.get("model") or {}
         row = {
             "date": today,
             "imei": imei,
             "nickName": v.get("nickName"),
             "vin": v.get("vin"),
-            "make": v.get("make"),
-            "model": v.get("model"),
-            "year": v.get("year"),
+            "make": model_obj.get("make"),
+            "model": model_obj.get("name"),
+            "year": model_obj.get("year"),
             "odometer": stats.get("odometer"),
             "fuelLevel": stats.get("fuelLevel"),
+            "isRunning": stats.get("isRunning"),
             "battery": (stats.get("battery") or {}).get("status") or (stats.get("battery") or {}).get("level"),
             "milOn": (stats.get("mil") or {}).get("milOn"),
             "speed": stats.get("speed"),
-            "heading": stats.get("heading"),
-            "lat": loc.get("lat") or loc.get("latitude"),
-            "lon": loc.get("lon") or loc.get("longitude"),
+            "heading": loc.get("heading"),
+            "lat": loc.get("lat"),
+            "lon": loc.get("lon"),
             "lastUpdated": stats.get("lastUpdated"),
         }
         by_key[(today, imei)] = row

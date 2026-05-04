@@ -40,12 +40,18 @@ function renderVehicles(vehicles) {
   for (const v of vehicles) {
     const stats = v.stats || {};
     const loc = stats.location || {};
+    // Bouncie nests make/model/year under v.model object
+    const modelObj = v.model || {};
+    const make = modelObj.make || "";
+    const name = modelObj.name || "";
+    const year = modelObj.year || "";
+    const displayName = v.nickName || [year, make, name].filter(Boolean).join(" ") || "Vehicle";
     const milStatus = stats.mil?.milOn ? '<span class="badge bad">MIL ON</span>' : '<span class="badge ok">MIL OK</span>';
-    const battery = stats.battery?.status || stats.battery?.level || "—";
-    const fuel = stats.fuelLevel != null ? `${fmtNum(stats.fuelLevel, 0)}%` : "—";
+    const running = stats.isRunning ? '<span class="badge ok">Running</span>' : '<span class="badge warn">Parked</span>';
+    const fuel = stats.fuelLevel != null ? `${fmtNum(stats.fuelLevel, 1)}%` : "—";
     const odo = stats.odometer != null ? `${fmtNum(stats.odometer, 0)} mi` : "—";
-    const speed = stats.speed != null ? `${fmtNum(stats.speed, 0)} mph` : "—";
-    const heading = stats.heading != null ? `${fmtNum(stats.heading, 0)}°` : "—";
+    const speed = stats.speed != null ? `${fmtNum(stats.speed, 1)} mph` : "—";
+    const heading = loc.heading != null ? `${fmtNum(loc.heading, 0)}°` : "—";
     const lastSeen = fmtDate(stats.lastUpdated);
     const lat = loc.lat ?? loc.latitude;
     const lon = loc.lon ?? loc.longitude;
@@ -54,13 +60,12 @@ function renderVehicles(vehicles) {
     const el = document.createElement("div");
     el.className = "card";
     el.innerHTML = `
-      <div class="label">${v.nickName || v.model || "Vehicle"} ${milStatus}</div>
-      <div class="value">${[v.year, v.make, v.model].filter(Boolean).join(" ")}</div>
+      <div class="label">${displayName} ${milStatus} ${running}</div>
+      <div class="value">${[year, make, name].filter(Boolean).join(" ")}</div>
       <div class="sub">VIN: ${v.vin || "—"} · IMEI: ${v.imei || "—"}</div>
       <hr style="border-color:var(--border);margin:0.75rem 0;" />
       <div class="sub">Odometer: ${odo}</div>
-      <div class="sub">Fuel level: ${fuel}</div>
-      <div class="sub">Battery: ${battery}</div>
+      <div class="sub">Fuel: ${fuel}</div>
       <div class="sub">Speed: ${speed} · Heading: ${heading}</div>
       <div class="sub">Last update: ${lastSeen}</div>
       <div class="sub">${mapLink}</div>
