@@ -1,0 +1,20 @@
+{
+  "totals": {
+    "trips_all": 0,
+    "trips_7d": 0,
+    "trips_30d": 0,
+    "miles_all": 0.0,
+    "miles_7d": 0.0,
+    "miles_30d": 0.0,
+    "fuel_all": 0.0,
+    "fuel_7d": 0.0,
+    "fuel_30d": 0.0,
+    "hard_brakes_all": 0,
+    "hard_accels_all": 0,
+    "hard_brakes_30d": 0,
+    "hard_accels_30d": 0
+  },
+  "daily": [],
+  "vehicle_count": 1,
+  "updated_at": "2026-05-04T20:03:36.543896+00:00"
+}
