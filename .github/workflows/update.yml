@@ -40,6 +40,16 @@ jobs:
           BOUNCIE_AUTH_CODE: ${{ inputs.auth_code || secrets.BOUNCIE_AUTH_CODE }}
         run: python scripts/fetch.py
 
+      - name: Rotate refresh token secret
+        if: hashFiles('.new_refresh_token') != ''
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          NEW_RT=$(cat .new_refresh_token)
+          gh secret set BOUNCIE_REFRESH_TOKEN --body "$NEW_RT" --repo ${{ github.repository }}
+          rm .new_refresh_token
+          echo "BOUNCIE_REFRESH_TOKEN secret updated automatically."
+
       - name: Commit data updates
         run: |
           git config user.name "github-actions[bot]"

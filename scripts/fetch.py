@@ -76,8 +76,12 @@ def get_access_token() -> str:
     body = resp.json()
     print(f"Token exchange OK. Keys returned: {list(body.keys())}")
     if "refresh_token" in body and body["refresh_token"] != refresh_token:
-        print("::warning::Bouncie returned a new refresh_token. Update BOUNCIE_REFRESH_TOKEN secret.")
-        print(f"new_refresh_token={body['refresh_token']}")
+        new_rt = body["refresh_token"]
+        print("::warning::Bouncie returned a new refresh_token — auto-updating secret.")
+        # Write to a file so the workflow step can call `gh secret set`
+        rt_file = DATA_DIR.parent / ".new_refresh_token"
+        rt_file.write_text(new_rt)
+        print(f"new_refresh_token written to {rt_file}")
     access_token = body["access_token"]
     # Decode JWT payload for debugging (no signature verification)
     try:
