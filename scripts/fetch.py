@@ -307,13 +307,6 @@ def main() -> None:
         if not imei:
             continue
 
-        # Diagnostic: probe the endpoint with no date filters to surface exact error
-        try:
-            probe = api_get(token, "/trips", params={"imei": imei})
-            print(f"Trips probe (no date filter): got {type(probe).__name__} response")
-        except requests.HTTPError:
-            pass  # the ::error:: line is printed inside api_get
-
         # Walk backwards in ≤7-day windows (Bouncie API enforces max 1-week per request)
         window_end = now
         while window_end > lookback_start:
@@ -324,6 +317,7 @@ def main() -> None:
                     "/trips",
                     params={
                         "imei": imei,
+                        "gpsFormat": "geojson",
                         "starts-after": window_start.strftime("%Y-%m-%dT%H:%M:%SZ"),
                         "ends-before": window_end.strftime("%Y-%m-%dT%H:%M:%SZ"),
                     },
