@@ -1,14 +1,14 @@
 """Fetches data from the Bouncie API and writes JSON snapshots into ./data.
 
-Required env vars (set as GitHub Action secrets):
-    BOUNCIE_API_KEY   — the API key from your bouncie.dev app page (simplest)
-
-  OR use OAuth (only needed if the API key doesn't work):
+Required env vars (set as GitHub Action secrets — only needed once):
     BOUNCIE_CLIENT_ID
     BOUNCIE_CLIENT_SECRET
-    BOUNCIE_REDIRECT_URI      https://github.com/ttohumcu/bouncie
-    BOUNCIE_AUTH_CODE         one-time code from the authorize redirect
-    BOUNCIE_REFRESH_TOKEN     stored after first OAuth run
+    BOUNCIE_REDIRECT_URI      e.g. https://github.com/ttohumcu/bouncie
+    BOUNCIE_REFRESH_TOKEN     one-time seed; auto-rotated into data/oauth.json
+
+After the first successful run, data/oauth.json stores the refresh token
+and is committed back to the repo. Subsequent runs read from there — no
+secret updates or GH_PAT required.
 
 Outputs (all kept indefinitely, day-by-day):
     data/vehicles.json          latest vehicle snapshot
@@ -16,6 +16,7 @@ Outputs (all kept indefinitely, day-by-day):
     data/vehicle_history.json   one row per (date, vehicle): end-of-day stats
     data/stats.json             per-day aggregates over all-time + summary
     data/last_updated.json      metadata
+    data/oauth.json             persisted OAuth state (NOT served by Pages)
 """
 
 from __future__ import annotations
@@ -31,25 +32,36 @@ import requests
 API_BASE = "https://api.bouncie.dev/v1"
 TOKEN_URL = "https://auth.bouncie.com/oauth/token"
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+OAUTH_FILE = DATA_DIR / "oauth.json"
 TRIP_LOOKBACK_DAYS = 28  # how far back to query the API per run; older trips already on disk are preserved
 TRIP_WINDOW_DAYS = 7    # max window per single API request (Bouncie enforces ≤1 week)
 
 
-def get_access_token() -> str:
-    # Simplest path: use the API key directly from the developer portal
-    api_key = os.environ.get("BOUNCIE_API_KEY")
-    if api_key:
-        return api_key
+def load_oauth() -> dict:
+    if OAUTH_FILE.exists():
+        try:
+            return json.loads(OAUTH_FILE.read_text())
+        except Exception:
+            pass
+    return {}
 
-    # OAuth path (fallback)
+
+def save_oauth(data: dict) -> None:
+    OAUTH_FILE.write_text(json.dumps(data, indent=2))
+
+
+def get_access_token() -> str:
     client_id = os.environ.get("BOUNCIE_CLIENT_ID")
     client_secret = os.environ.get("BOUNCIE_CLIENT_SECRET")
     redirect_uri = os.environ.get("BOUNCIE_REDIRECT_URI")
-    refresh_token = os.environ.get("BOUNCIE_REFRESH_TOKEN")
     auth_code = os.environ.get("BOUNCIE_AUTH_CODE")
 
     if not client_id or not client_secret:
-        sys.exit("Set BOUNCIE_API_KEY, or set BOUNCIE_CLIENT_ID + BOUNCIE_CLIENT_SECRET.")
+        sys.exit("Set BOUNCIE_CLIENT_ID + BOUNCIE_CLIENT_SECRET.")
+
+    # Prefer refresh token from persisted file, fall back to secret env var
+    oauth = load_oauth()
+    refresh_token = oauth.get("refresh_token") or os.environ.get("BOUNCIE_REFRESH_TOKEN")
 
     if refresh_token:
         payload = {
@@ -68,7 +80,7 @@ def get_access_token() -> str:
             "redirect_uri": redirect_uri,
         }
     else:
-        sys.exit("Set BOUNCIE_API_KEY, or set BOUNCIE_REFRESH_TOKEN / BOUNCIE_AUTH_CODE for OAuth.")
+        sys.exit("No refresh token found. Set BOUNCIE_REFRESH_TOKEN secret for the first run.")
 
     resp = requests.post(TOKEN_URL, data=payload, timeout=30)
     if not resp.ok:
@@ -76,22 +88,24 @@ def get_access_token() -> str:
     resp.raise_for_status()
     body = resp.json()
     print(f"Token exchange OK. Keys returned: {list(body.keys())}")
-    if "refresh_token" in body and body["refresh_token"] != refresh_token:
+
+    # Always persist the latest refresh token — self-rotating, no GH_PAT needed
+    if "refresh_token" in body:
         new_rt = body["refresh_token"]
-        print("::warning::Bouncie returned a new refresh_token — auto-updating secret.")
-        # Write to a file so the workflow step can call `gh secret set`
-        rt_file = DATA_DIR.parent / ".new_refresh_token"
-        rt_file.write_text(new_rt)
-        print(f"new_refresh_token written to {rt_file}")
+        save_oauth({"refresh_token": new_rt})
+        if new_rt != refresh_token:
+            print("Refresh token rotated and saved to data/oauth.json.")
+        else:
+            print("Refresh token unchanged; saved to data/oauth.json.")
+
     access_token = body["access_token"]
-    # Decode JWT payload for debugging (no signature verification)
     try:
         import base64
         parts = access_token.split(".")
         if len(parts) == 3:
             padded = parts[1] + "=" * (-len(parts[1]) % 4)
-            payload = json.loads(base64.b64decode(padded))
-            print(f"Token scopes: {payload.get('scopes')}, exp: {payload.get('exp')}, userId: {payload.get('userId')}")
+            claims = json.loads(base64.b64decode(padded))
+            print(f"Token scopes: {claims.get('scopes')}, exp: {claims.get('exp')}, userId: {claims.get('userId')}")
     except Exception as e:
         print(f"Could not decode token: {e}")
     return access_token

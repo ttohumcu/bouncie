@@ -40,27 +40,6 @@ jobs:
           BOUNCIE_AUTH_CODE: ${{ inputs.auth_code || secrets.BOUNCIE_AUTH_CODE }}
         run: python scripts/fetch.py
 
-      - name: Rotate refresh token secret
-        if: hashFiles('.new_refresh_token') != ''
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "::error::GH_PAT secret is not set — cannot auto-rotate BOUNCIE_REFRESH_TOKEN."
-            echo "::error::Add a GitHub PAT (repo scope) as the GH_PAT secret to enable auto-rotation."
-            rm -f .new_refresh_token
-            exit 1
-          fi
-          NEW_RT=$(cat .new_refresh_token)
-          if gh secret set BOUNCIE_REFRESH_TOKEN --body "$NEW_RT" --repo ${{ github.repository }}; then
-            echo "BOUNCIE_REFRESH_TOKEN secret updated automatically."
-          else
-            echo "::error::gh secret set failed — check that GH_PAT has repo scope on this repository."
-            rm -f .new_refresh_token
-            exit 1
-          fi
-          rm -f .new_refresh_token
-
       - name: Commit data updates
         run: |
           git config user.name "github-actions[bot]"
@@ -73,10 +52,18 @@ jobs:
             git push
           fi
 
+      - name: Build site
+        run: |
+          mkdir -p _site/data _site/assets
+          cp index.html .nojekyll _site/
+          cp assets/* _site/assets/
+          cp data/vehicles.json data/trips.json data/stats.json \
+             data/vehicle_history.json data/last_updated.json _site/data/
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
 
   deploy:
     needs: fetch

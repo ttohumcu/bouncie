@@ -73,7 +73,7 @@ function renderVehicles(vehicles) {
     el.innerHTML = `
       <div class="label">${displayName} ${milStatus} ${running}</div>
       <div class="value">${[year, make, name].filter(Boolean).join(" ")}</div>
-      <div class="sub">VIN: ${v.vin || "—"} · IMEI: ${v.imei || "—"}</div>
+      <div class="sub">Year: ${year || "—"} · Make: ${make || "—"}</div>
       <hr style="border-color:var(--border);margin:0.75rem 0;" />
       <div class="sub">Odometer: ${odo}</div>
       <div class="sub">Fuel: ${fuel}</div>
