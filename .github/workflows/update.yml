@@ -45,10 +45,21 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::GH_PAT secret is not set — cannot auto-rotate BOUNCIE_REFRESH_TOKEN."
+            echo "::error::Add a GitHub PAT (repo scope) as the GH_PAT secret to enable auto-rotation."
+            rm -f .new_refresh_token
+            exit 1
+          fi
           NEW_RT=$(cat .new_refresh_token)
-          gh secret set BOUNCIE_REFRESH_TOKEN --body "$NEW_RT" --repo ${{ github.repository }}
-          rm .new_refresh_token
-          echo "BOUNCIE_REFRESH_TOKEN secret updated automatically."
+          if gh secret set BOUNCIE_REFRESH_TOKEN --body "$NEW_RT" --repo ${{ github.repository }}; then
+            echo "BOUNCIE_REFRESH_TOKEN secret updated automatically."
+          else
+            echo "::error::gh secret set failed — check that GH_PAT has repo scope on this repository."
+            rm -f .new_refresh_token
+            exit 1
+          fi
+          rm -f .new_refresh_token
 
       - name: Commit data updates
         run: |
