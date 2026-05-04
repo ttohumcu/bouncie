@@ -1,0 +1,65 @@
+name: Update Bouncie data
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bouncie-update
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Fetch Bouncie data
+        env:
+          BOUNCIE_CLIENT_ID: ${{ secrets.BOUNCIE_CLIENT_ID }}
+          BOUNCIE_CLIENT_SECRET: ${{ secrets.BOUNCIE_CLIENT_SECRET }}
+          BOUNCIE_REDIRECT_URI: ${{ secrets.BOUNCIE_REDIRECT_URI }}
+          BOUNCIE_REFRESH_TOKEN: ${{ secrets.BOUNCIE_REFRESH_TOKEN }}
+          BOUNCIE_AUTH_CODE: ${{ secrets.BOUNCIE_AUTH_CODE }}
+        run: python scripts/fetch.py
+
+      - name: Commit data updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --staged --quiet; then
+            echo "No data changes."
+          else
+            git commit -m "data: refresh $(date -u +'%Y-%m-%dT%H:%MZ')"
+            git push
+          fi
+
+  pages:
+    needs: fetch
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deploy
+        uses: actions/deploy-pages@v4

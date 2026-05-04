@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bouncie Dashboard</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+    <script src="assets/dashboard.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <h1>Bouncie Dashboard</h1>
+      <p id="updated">Loading…</p>
+    </header>
+
+    <section id="summary" class="grid"></section>
+
+    <section>
+      <h2>Vehicles</h2>
+      <div id="vehicles" class="grid"></div>
+    </section>
+
+    <section>
+      <h2>Daily Activity (last 30 days)</h2>
+      <div class="charts">
+        <div class="chart-card"><canvas id="milesChart"></canvas></div>
+        <div class="chart-card"><canvas id="tripsChart"></canvas></div>
+        <div class="chart-card"><canvas id="fuelChart"></canvas></div>
+        <div class="chart-card"><canvas id="behaviorChart"></canvas></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Recent Trips</h2>
+      <div class="table-wrap">
+        <table id="trips">
+          <thead>
+            <tr>
+              <th>Start</th><th>End</th><th>Distance</th><th>Duration</th>
+              <th>Top mph</th><th>Fuel</th><th>Hard brakes</th><th>Hard accel</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      <p>Data refreshes every 4 hours via GitHub Actions. Source on <a href="https://github.com/ttohumcu/bouncie">GitHub</a>.</p>
+    </footer>
+  </body>
+</html>
