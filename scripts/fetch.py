@@ -112,20 +112,16 @@ def get_access_token() -> str:
 
 
 def api_get(token: str, path: str, params: dict | None = None) -> list | dict:
-    # Try without Bearer prefix first (some Bouncie implementations don't use it)
-    for auth_header in [token, f"Bearer {token}"]:
-        resp = requests.get(
-            f"{API_BASE}{path}",
-            headers={"Authorization": auth_header},
-            params=params,
-            timeout=30,
-        )
-        print(f"Auth format {'Bearer' if 'Bearer' in auth_header else 'plain'}: {resp.status_code}")
-        if resp.ok:
-            return resp.json()
-        print(f"  Response: {resp.text[:200]}")
+    resp = requests.get(
+        f"{API_BASE}{path}",
+        headers={"Authorization": f"Bearer {token}"},
+        params=params,
+        timeout=30,
+    )
+    if not resp.ok:
+        print(f"::error::GET {path} → {resp.status_code}: {resp.text[:500]}")
     resp.raise_for_status()
-    return resp.json()  # unreachable, keeps type checker happy
+    return resp.json()
 
 
 def load_json(name: str, default):
@@ -285,6 +281,14 @@ def main() -> None:
         imei = v.get("imei")
         if not imei:
             continue
+
+        # Diagnostic: probe the endpoint with no date filters to surface exact error
+        try:
+            probe = api_get(token, "/trips", params={"imei": imei})
+            print(f"Trips probe (no date filter): got {type(probe).__name__} response")
+        except requests.HTTPError:
+            pass  # the ::error:: line is printed inside api_get
+
         # Walk backwards in ≤7-day windows (Bouncie API enforces max 1-week per request)
         window_end = now
         while window_end > lookback_start:
@@ -307,7 +311,7 @@ def main() -> None:
                 print(f"  Fetched {len(trips)} trips for {imei} {window_start.date()}–{window_end.date()}")
             except requests.HTTPError as e:
                 print(f"::error::Trips {imei} {window_start.date()}–{window_end.date()}: {e}")
-                break  # Auth failures won't fix themselves; stop early
+                break
             window_end = window_start
 
     existing_trips = (load_json("trips.json", {}) or {}).get("trips", [])
