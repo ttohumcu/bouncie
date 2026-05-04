@@ -81,7 +81,7 @@ def get_access_token() -> str:
 def api_get(token: str, path: str, params: dict | None = None) -> list | dict:
     resp = requests.get(
         f"{API_BASE}{path}",
-        headers={"Authorization": token},
+        headers={"Authorization": f"Bearer {token}"},
         params=params,
         timeout=30,
     )
