@@ -70,8 +70,11 @@ def get_access_token() -> str:
         sys.exit("Set BOUNCIE_API_KEY, or set BOUNCIE_REFRESH_TOKEN / BOUNCIE_AUTH_CODE for OAuth.")
 
     resp = requests.post(TOKEN_URL, data=payload, timeout=30)
+    if not resp.ok:
+        print(f"Token exchange failed {resp.status_code}: {resp.text[:500]}")
     resp.raise_for_status()
     body = resp.json()
+    print(f"Token exchange OK. Keys returned: {list(body.keys())}")
     if "refresh_token" in body and body["refresh_token"] != refresh_token:
         print("::warning::Bouncie returned a new refresh_token. Update BOUNCIE_REFRESH_TOKEN secret.")
         print(f"new_refresh_token={body['refresh_token']}")
@@ -85,6 +88,8 @@ def api_get(token: str, path: str, params: dict | None = None) -> list | dict:
         params=params,
         timeout=30,
     )
+    if not resp.ok:
+        print(f"API error {resp.status_code} on {path}: {resp.text[:500]}")
     resp.raise_for_status()
     return resp.json()
 
