@@ -78,20 +78,35 @@ def get_access_token() -> str:
     if "refresh_token" in body and body["refresh_token"] != refresh_token:
         print("::warning::Bouncie returned a new refresh_token. Update BOUNCIE_REFRESH_TOKEN secret.")
         print(f"new_refresh_token={body['refresh_token']}")
-    return body["access_token"]
+    access_token = body["access_token"]
+    # Decode JWT payload for debugging (no signature verification)
+    try:
+        import base64
+        parts = access_token.split(".")
+        if len(parts) == 3:
+            padded = parts[1] + "=" * (-len(parts[1]) % 4)
+            payload = json.loads(base64.b64decode(padded))
+            print(f"Token scopes: {payload.get('scopes')}, exp: {payload.get('exp')}, userId: {payload.get('userId')}")
+    except Exception as e:
+        print(f"Could not decode token: {e}")
+    return access_token
 
 
 def api_get(token: str, path: str, params: dict | None = None) -> list | dict:
-    resp = requests.get(
-        f"{API_BASE}{path}",
-        headers={"Authorization": f"Bearer {token}"},
-        params=params,
-        timeout=30,
-    )
-    if not resp.ok:
-        print(f"API error {resp.status_code} on {path}: {resp.text[:500]}")
+    # Try without Bearer prefix first (some Bouncie implementations don't use it)
+    for auth_header in [token, f"Bearer {token}"]:
+        resp = requests.get(
+            f"{API_BASE}{path}",
+            headers={"Authorization": auth_header},
+            params=params,
+            timeout=30,
+        )
+        print(f"Auth format {'Bearer' if 'Bearer' in auth_header else 'plain'}: {resp.status_code}")
+        if resp.ok:
+            return resp.json()
+        print(f"  Response: {resp.text[:200]}")
     resp.raise_for_status()
-    return resp.json()
+    return resp.json()  # unreachable, keeps type checker happy
 
 
 def load_json(name: str, default):
