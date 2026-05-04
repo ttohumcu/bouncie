@@ -51,11 +51,15 @@ def save_oauth(data: dict) -> None:
 
 
 def get_access_token() -> str:
-    # --- Priority 1: static API key (never expires, no OAuth needed) ---
+    # --- Priority 1: static API key (try it; fall through to OAuth if it fails) ---
     api_key = os.environ.get("BOUNCIE_API_KEY")
     if api_key:
-        print("Using API key auth.")
-        return api_key
+        probe = requests.get(f"{API_BASE}/vehicles",
+                             headers={"Authorization": api_key}, timeout=30)
+        if probe.ok:
+            print("Using API key auth.")
+            return api_key
+        print(f"API key returned {probe.status_code} — falling back to OAuth.")
 
     client_id = os.environ.get("BOUNCIE_CLIENT_ID")
     client_secret = os.environ.get("BOUNCIE_CLIENT_SECRET")
