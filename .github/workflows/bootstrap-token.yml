@@ -1,0 +1,55 @@
+name: Bootstrap OAuth token
+
+on:
+  workflow_dispatch:
+    inputs:
+      auth_code:
+        description: "Bouncie auth code — paste immediately after getting it"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Exchange auth code → access+refresh tokens via curl (no pip install needed).
+      # curl is available instantly on the runner, so this completes in ~5 seconds —
+      # well within Bouncie's ~60-second auth code expiry window.
+      - name: Exchange auth code for tokens
+        env:
+          BOUNCIE_CLIENT_ID: ${{ secrets.BOUNCIE_CLIENT_ID }}
+          BOUNCIE_CLIENT_SECRET: ${{ secrets.BOUNCIE_CLIENT_SECRET }}
+          BOUNCIE_REDIRECT_URI: ${{ secrets.BOUNCIE_REDIRECT_URI }}
+          AUTH_CODE: ${{ inputs.auth_code }}
+        run: |
+          echo "Exchanging auth code…"
+          response=$(curl -s -X POST https://auth.bouncie.com/oauth/token \
+            --data-urlencode "client_id=${BOUNCIE_CLIENT_ID}" \
+            --data-urlencode "client_secret=${BOUNCIE_CLIENT_SECRET}" \
+            --data-urlencode "grant_type=authorization_code" \
+            --data-urlencode "code=${AUTH_CODE}" \
+            --data-urlencode "redirect_uri=${BOUNCIE_REDIRECT_URI}")
+
+          echo "Response keys: $(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(list(d.keys()))" 2>/dev/null || echo "(parse error)")"
+
+          refresh_token=$(echo "$response" | python3 -c "import sys,json; print(json.load(sys.stdin).get('refresh_token',''))" 2>/dev/null)
+
+          if [ -z "$refresh_token" ]; then
+            echo "::error::No refresh_token in response: $response"
+            exit 1
+          fi
+
+          mkdir -p data
+          printf '{"refresh_token":"%s"}\n' "$refresh_token" > data/oauth.json
+          echo "Refresh token saved."
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/oauth.json
+          git commit -m "chore: bootstrap OAuth refresh token"
+          git push
+          echo "Token committed to repo. Run the 'Update Bouncie data' workflow next."
