@@ -4,6 +4,10 @@ on:
   schedule:
     - cron: "0 */4 * * *"
   workflow_dispatch:
+    inputs:
+      auth_code:
+        description: "One-time Bouncie auth code (paste here immediately after getting it)"
+        required: false
 
 permissions:
   contents: write
@@ -28,12 +32,11 @@ jobs:
       - name: Fetch Bouncie data
         env:
           BOUNCIE_API_KEY: ${{ secrets.BOUNCIE_API_KEY }}
-          # OAuth fallback (only needed if API key doesn't work)
           BOUNCIE_CLIENT_ID: ${{ secrets.BOUNCIE_CLIENT_ID }}
           BOUNCIE_CLIENT_SECRET: ${{ secrets.BOUNCIE_CLIENT_SECRET }}
           BOUNCIE_REDIRECT_URI: ${{ secrets.BOUNCIE_REDIRECT_URI }}
           BOUNCIE_REFRESH_TOKEN: ${{ secrets.BOUNCIE_REFRESH_TOKEN }}
-          BOUNCIE_AUTH_CODE: ${{ secrets.BOUNCIE_AUTH_CODE }}
+          BOUNCIE_AUTH_CODE: ${{ inputs.auth_code || secrets.BOUNCIE_AUTH_CODE }}
         run: python scripts/fetch.py
 
       - name: Commit data updates
