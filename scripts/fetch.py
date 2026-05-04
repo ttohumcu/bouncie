@@ -1,10 +1,14 @@
 """Fetches data from the Bouncie API and writes JSON snapshots into ./data.
 
 Required env vars (set as GitHub Action secrets):
+    BOUNCIE_API_KEY   — the API key from your bouncie.dev app page (simplest)
+
+  OR use OAuth (only needed if the API key doesn't work):
     BOUNCIE_CLIENT_ID
     BOUNCIE_CLIENT_SECRET
-    BOUNCIE_REDIRECT_URI
-    BOUNCIE_REFRESH_TOKEN   (or BOUNCIE_AUTH_CODE for first-run exchange)
+    BOUNCIE_REDIRECT_URI      https://github.com/ttohumcu/bouncie
+    BOUNCIE_AUTH_CODE         one-time code from the authorize redirect
+    BOUNCIE_REFRESH_TOKEN     stored after first OAuth run
 
 Outputs (all kept indefinitely, day-by-day):
     data/vehicles.json          latest vehicle snapshot
@@ -31,11 +35,20 @@ TRIP_LOOKBACK_DAYS = 30  # how far back to query the API per run; older trips al
 
 
 def get_access_token() -> str:
-    client_id = os.environ["BOUNCIE_CLIENT_ID"]
-    client_secret = os.environ["BOUNCIE_CLIENT_SECRET"]
-    redirect_uri = os.environ["BOUNCIE_REDIRECT_URI"]
+    # Simplest path: use the API key directly from the developer portal
+    api_key = os.environ.get("BOUNCIE_API_KEY")
+    if api_key:
+        return api_key
+
+    # OAuth path (fallback)
+    client_id = os.environ.get("BOUNCIE_CLIENT_ID")
+    client_secret = os.environ.get("BOUNCIE_CLIENT_SECRET")
+    redirect_uri = os.environ.get("BOUNCIE_REDIRECT_URI")
     refresh_token = os.environ.get("BOUNCIE_REFRESH_TOKEN")
     auth_code = os.environ.get("BOUNCIE_AUTH_CODE")
+
+    if not client_id or not client_secret:
+        sys.exit("Set BOUNCIE_API_KEY, or set BOUNCIE_CLIENT_ID + BOUNCIE_CLIENT_SECRET.")
 
     if refresh_token:
         payload = {
@@ -54,7 +67,7 @@ def get_access_token() -> str:
             "redirect_uri": redirect_uri,
         }
     else:
-        sys.exit("Set BOUNCIE_REFRESH_TOKEN or BOUNCIE_AUTH_CODE.")
+        sys.exit("Set BOUNCIE_API_KEY, or set BOUNCIE_REFRESH_TOKEN / BOUNCIE_AUTH_CODE for OAuth.")
 
     resp = requests.post(TOKEN_URL, data=payload, timeout=30)
     resp.raise_for_status()

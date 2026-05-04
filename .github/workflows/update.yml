@@ -27,6 +27,8 @@ jobs:
 
       - name: Fetch Bouncie data
         env:
+          BOUNCIE_API_KEY: ${{ secrets.BOUNCIE_API_KEY }}
+          # OAuth fallback (only needed if API key doesn't work)
           BOUNCIE_CLIENT_ID: ${{ secrets.BOUNCIE_CLIENT_ID }}
           BOUNCIE_CLIENT_SECRET: ${{ secrets.BOUNCIE_CLIENT_SECRET }}
           BOUNCIE_REDIRECT_URI: ${{ secrets.BOUNCIE_REDIRECT_URI }}
