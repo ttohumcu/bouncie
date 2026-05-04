@@ -48,6 +48,19 @@ def load_oauth() -> dict:
 
 def save_oauth(data: dict) -> None:
     OAUTH_FILE.write_text(json.dumps(data, indent=2))
+    # Commit immediately so the token survives even if the rest of the run fails.
+    try:
+        import subprocess
+        subprocess.run(["git", "config", "user.name", "github-actions[bot]"], capture_output=True)
+        subprocess.run(["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"], capture_output=True)
+        subprocess.run(["git", "add", str(OAUTH_FILE)], check=True, capture_output=True)
+        r = subprocess.run(["git", "commit", "-m", "chore: persist rotated OAuth token"], capture_output=True, text=True)
+        if r.returncode == 0:
+            subprocess.run(["git", "push"], capture_output=True)
+            print("OAuth token committed immediately.")
+        # returncode 1 with "nothing to commit" is fine — token unchanged
+    except Exception as e:
+        print(f"Warning: could not auto-commit token: {e}")
 
 
 def get_access_token() -> str:

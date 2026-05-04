@@ -91,6 +91,7 @@ jobs:
   deploy:
     needs: fetch
     runs-on: ubuntu-latest
+    if: needs.fetch.result == 'success'
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
