@@ -53,15 +53,34 @@ def save_oauth(data: dict) -> None:
 def get_access_token() -> str:
     client_id = os.environ.get("BOUNCIE_CLIENT_ID")
     client_secret = os.environ.get("BOUNCIE_CLIENT_SECRET")
-    redirect_uri = os.environ.get("BOUNCIE_REDIRECT_URI")
-    auth_code = os.environ.get("BOUNCIE_AUTH_CODE")
 
     if not client_id or not client_secret:
         sys.exit("Set BOUNCIE_CLIENT_ID + BOUNCIE_CLIENT_SECRET.")
 
-    # Prefer refresh token from persisted file, fall back to secret env var
+    # --- Priority 1: password grant (never expires, no token rotation headaches) ---
+    username = os.environ.get("BOUNCIE_USERNAME")
+    password = os.environ.get("BOUNCIE_PASSWORD")
+    if username and password:
+        resp = requests.post(TOKEN_URL, data={
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "grant_type": "password",
+            "username": username,
+            "password": password,
+        }, timeout=30)
+        if resp.ok:
+            body = resp.json()
+            print(f"Password grant OK. Keys: {list(body.keys())}")
+            if "refresh_token" in body:
+                save_oauth({"refresh_token": body["refresh_token"]})
+            return body["access_token"]
+        print(f"Password grant failed {resp.status_code}: {resp.text[:300]}")
+
+    # --- Priority 2: refresh token from committed file or secret ---
     oauth = load_oauth()
     refresh_token = oauth.get("refresh_token") or os.environ.get("BOUNCIE_REFRESH_TOKEN")
+    redirect_uri = os.environ.get("BOUNCIE_REDIRECT_URI")
+    auth_code = os.environ.get("BOUNCIE_AUTH_CODE")
 
     if refresh_token:
         payload = {
@@ -80,35 +99,18 @@ def get_access_token() -> str:
             "redirect_uri": redirect_uri,
         }
     else:
-        sys.exit("No refresh token found. Set BOUNCIE_REFRESH_TOKEN secret for the first run.")
+        sys.exit("No credentials found. Set BOUNCIE_USERNAME + BOUNCIE_PASSWORD secrets.")
 
     resp = requests.post(TOKEN_URL, data=payload, timeout=30)
     if not resp.ok:
         print(f"Token exchange failed {resp.status_code}: {resp.text[:500]}")
     resp.raise_for_status()
     body = resp.json()
-    print(f"Token exchange OK. Keys returned: {list(body.keys())}")
-
-    # Always persist the latest refresh token — self-rotating, no GH_PAT needed
+    print(f"Token exchange OK. Keys: {list(body.keys())}")
     if "refresh_token" in body:
-        new_rt = body["refresh_token"]
-        save_oauth({"refresh_token": new_rt})
-        if new_rt != refresh_token:
-            print("Refresh token rotated and saved to data/oauth.json.")
-        else:
-            print("Refresh token unchanged; saved to data/oauth.json.")
-
-    access_token = body["access_token"]
-    try:
-        import base64
-        parts = access_token.split(".")
-        if len(parts) == 3:
-            padded = parts[1] + "=" * (-len(parts[1]) % 4)
-            claims = json.loads(base64.b64decode(padded))
-            print(f"Token scopes: {claims.get('scopes')}, exp: {claims.get('exp')}, userId: {claims.get('userId')}")
-    except Exception as e:
-        print(f"Could not decode token: {e}")
-    return access_token
+        save_oauth({"refresh_token": body["refresh_token"]})
+        print("Refresh token saved to data/oauth.json.")
+    return body["access_token"]
 
 
 def api_get(token: str, path: str, params: dict | None = None) -> list | dict:

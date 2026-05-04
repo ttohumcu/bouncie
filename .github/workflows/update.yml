@@ -37,6 +37,8 @@ jobs:
         env:
           BOUNCIE_CLIENT_ID: ${{ secrets.BOUNCIE_CLIENT_ID }}
           BOUNCIE_CLIENT_SECRET: ${{ secrets.BOUNCIE_CLIENT_SECRET }}
+          BOUNCIE_USERNAME: ${{ secrets.BOUNCIE_USERNAME }}
+          BOUNCIE_PASSWORD: ${{ secrets.BOUNCIE_PASSWORD }}
           BOUNCIE_REDIRECT_URI: ${{ secrets.BOUNCIE_REDIRECT_URI }}
           BOUNCIE_REFRESH_TOKEN: ${{ secrets.BOUNCIE_REFRESH_TOKEN }}
           BOUNCIE_AUTH_CODE: ${{ inputs.auth_code || secrets.BOUNCIE_AUTH_CODE }}
