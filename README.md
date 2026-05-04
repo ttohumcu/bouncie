@@ -80,10 +80,14 @@ python -m http.server 8000   # then open http://localhost:8000
 - `scripts/fetch.py` — Bouncie API client + JSON writers
 - `.github/workflows/update.yml` — scheduled fetch + Pages deploy
 - `index.html`, `assets/` — dashboard UI
-- `data/` — committed snapshots (`vehicles.json`, `trips.json`, `stats.json`)
+- `data/` — committed snapshots, all kept indefinitely:
+  - `vehicles.json` — current vehicle state
+  - `trips.json` — every trip ever seen (deduped)
+  - `vehicle_history.json` — one row per (date, vehicle) with end-of-day stats
+  - `stats.json` — per-day aggregates over all-time + summary totals
 
 ## Tweaks
 
 - Change the refresh cadence: edit the `cron` in `.github/workflows/update.yml`. `0 */4 * * *` = every 4 hours.
-- Change trip retention: `TRIP_HISTORY_DAYS` in `scripts/fetch.py`.
+- Change how far back each run queries the API: `TRIP_LOOKBACK_DAYS` in `scripts/fetch.py` (older trips already in `trips.json` are always kept).
 - Add more endpoints: extend `main()` in `scripts/fetch.py` and surface them in `assets/dashboard.js`.

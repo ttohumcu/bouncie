@@ -17,12 +17,12 @@
     <section id="summary" class="grid"></section>
 
     <section>
-      <h2>Vehicles</h2>
+      <h2>Vehicles (current)</h2>
       <div id="vehicles" class="grid"></div>
     </section>
 
     <section>
-      <h2>Daily Activity (last 30 days)</h2>
+      <h2>All-time daily activity</h2>
       <div class="charts">
         <div class="chart-card"><canvas id="milesChart"></canvas></div>
         <div class="chart-card"><canvas id="tripsChart"></canvas></div>
@@ -32,7 +32,40 @@
     </section>
 
     <section>
-      <h2>Recent Trips</h2>
+      <h2>Day-by-day breakdown</h2>
+      <p class="sub">Every day with activity. Newest first.</p>
+      <div class="table-wrap">
+        <table id="daily">
+          <thead>
+            <tr>
+              <th>Date</th><th>Trips</th><th>Miles</th><th>Drive time</th>
+              <th>Fuel</th><th>Top mph</th><th>Hard brakes</th><th>Hard accels</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Vehicle daily snapshots</h2>
+      <p class="sub">End-of-day stats captured each run. Newest first.</p>
+      <div class="table-wrap">
+        <table id="history">
+          <thead>
+            <tr>
+              <th>Date</th><th>Vehicle</th><th>Odometer</th><th>Fuel level</th>
+              <th>Battery</th><th>MIL</th><th>Last seen</th><th>Location</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>All trips</h2>
+      <p class="sub">Every trip ever recorded by the device.</p>
       <div class="table-wrap">
         <table id="trips">
           <thead>
@@ -47,7 +80,7 @@
     </section>
 
     <footer>
-      <p>Data refreshes every 4 hours via GitHub Actions. Source on <a href="https://github.com/ttohumcu/bouncie">GitHub</a>.</p>
+      <p>Refreshes every 4 hours via GitHub Actions. Source on <a href="https://github.com/ttohumcu/bouncie">GitHub</a>.</p>
     </footer>
   </body>
 </html>

@@ -24,10 +24,10 @@ function renderSummary(stats) {
   const root = document.getElementById("summary");
   const t = stats.totals || {};
   root.append(
-    card("Trips (7d)", fmtNum(t.trips_7d, 0), `${fmtNum(t.trips_30d, 0)} in last 30d`),
-    card("Miles (7d)", fmtNum(t.miles_7d), `${fmtNum(t.miles_30d)} in last 30d`),
-    card("Fuel (7d)", `${fmtNum(t.fuel_7d, 2)} gal`, `${fmtNum(t.fuel_30d, 2)} gal in last 30d`),
-    card("Hard brakes (30d)", fmtNum(t.hard_brakes_30d, 0), `${fmtNum(t.hard_accels_30d, 0)} hard accels`),
+    card("Trips (all-time)", fmtNum(t.trips_all, 0), `${fmtNum(t.trips_7d, 0)} in last 7d`),
+    card("Miles (all-time)", fmtNum(t.miles_all), `${fmtNum(t.miles_7d)} in last 7d`),
+    card("Fuel (all-time)", `${fmtNum(t.fuel_all, 2)} gal`, `${fmtNum(t.fuel_7d, 2)} gal in last 7d`),
+    card("Hard events (all-time)", `${fmtNum(t.hard_brakes_all, 0)} / ${fmtNum(t.hard_accels_all, 0)}`, "brakes / accels"),
   );
 }
 
@@ -106,14 +106,64 @@ function renderCharts(stats) {
   ]);
 }
 
+function renderDaily(stats) {
+  const tbody = document.querySelector("#daily tbody");
+  const rows = [...(stats.daily || [])].reverse();
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="sub">No daily activity yet.</td></tr>';
+    return;
+  }
+  for (const d of rows) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${d.date}</td>
+      <td>${fmtNum(d.trips, 0)}</td>
+      <td>${fmtNum(d.miles)} mi</td>
+      <td>${fmtNum(d.duration_min, 0)} min</td>
+      <td>${fmtNum(d.fuel, 2)} gal</td>
+      <td>${fmtNum(d.max_mph, 0)}</td>
+      <td>${fmtNum(d.hard_brakes, 0)}</td>
+      <td>${fmtNum(d.hard_accels, 0)}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function renderHistory(history) {
+  const tbody = document.querySelector("#history tbody");
+  if (!history.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="sub">No daily snapshots yet.</td></tr>';
+    return;
+  }
+  for (const h of history) {
+    const name = h.nickName || [h.year, h.make, h.model].filter(Boolean).join(" ") || h.imei;
+    const mil = h.milOn === true ? '<span class="badge bad">ON</span>' :
+                h.milOn === false ? '<span class="badge ok">OK</span>' : "—";
+    const loc = h.lat && h.lon
+      ? `<a href="https://maps.google.com/?q=${h.lat},${h.lon}" target="_blank" rel="noopener">map</a>`
+      : "—";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${h.date}</td>
+      <td>${name}</td>
+      <td>${h.odometer != null ? fmtNum(h.odometer, 0) + " mi" : "—"}</td>
+      <td>${h.fuelLevel != null ? fmtNum(h.fuelLevel, 0) + "%" : "—"}</td>
+      <td>${h.battery ?? "—"}</td>
+      <td>${mil}</td>
+      <td>${fmtDate(h.lastUpdated)}</td>
+      <td>${loc}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
 function renderTrips(trips) {
   const tbody = document.querySelector("#trips tbody");
-  const rows = trips.slice(0, 50);
-  if (!rows.length) {
+  if (!trips.length) {
     tbody.innerHTML = '<tr><td colspan="8" class="sub">No trips yet.</td></tr>';
     return;
   }
-  for (const t of rows) {
+  for (const t of trips) {
     const start = t.startTime || t.start_ts;
     const end = t.endTime || t.end_ts;
     const dur = start && end ? Math.round((new Date(end) - new Date(start)) / 60000) : null;
@@ -136,15 +186,18 @@ function renderTrips(trips) {
 
 (async () => {
   try {
-    const [vehicles, trips, stats] = await Promise.all([
+    const [vehicles, trips, stats, history] = await Promise.all([
       fetchJson("data/vehicles.json"),
       fetchJson("data/trips.json"),
       fetchJson("data/stats.json"),
+      fetchJson("data/vehicle_history.json").catch(() => ({ history: [] })),
     ]);
     document.getElementById("updated").textContent = `Last updated: ${fmtDate(stats.updated_at)}`;
     renderSummary(stats);
     renderVehicles(vehicles.vehicles || []);
     renderCharts(stats);
+    renderDaily(stats);
+    renderHistory(history.history || []);
     renderTrips(trips.trips || []);
   } catch (err) {
     document.getElementById("updated").textContent =
