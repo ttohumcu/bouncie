@@ -35,6 +35,7 @@ jobs:
         id: fetch
         continue-on-error: true
         env:
+          BOUNCIE_API_KEY: ${{ secrets.BOUNCIE_API_KEY }}
           BOUNCIE_CLIENT_ID: ${{ secrets.BOUNCIE_CLIENT_ID }}
           BOUNCIE_CLIENT_SECRET: ${{ secrets.BOUNCIE_CLIENT_SECRET }}
           BOUNCIE_USERNAME: ${{ secrets.BOUNCIE_USERNAME }}

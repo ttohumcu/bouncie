@@ -51,13 +51,19 @@ def save_oauth(data: dict) -> None:
 
 
 def get_access_token() -> str:
+    # --- Priority 1: static API key (never expires, no OAuth needed) ---
+    api_key = os.environ.get("BOUNCIE_API_KEY")
+    if api_key:
+        print("Using API key auth.")
+        return api_key
+
     client_id = os.environ.get("BOUNCIE_CLIENT_ID")
     client_secret = os.environ.get("BOUNCIE_CLIENT_SECRET")
 
     if not client_id or not client_secret:
-        sys.exit("Set BOUNCIE_CLIENT_ID + BOUNCIE_CLIENT_SECRET.")
+        sys.exit("Set BOUNCIE_API_KEY, or set BOUNCIE_CLIENT_ID + BOUNCIE_CLIENT_SECRET.")
 
-    # --- Priority 1: password grant (never expires, no token rotation headaches) ---
+    # --- Priority 2: password grant (never expires, no token rotation headaches) ---
     username = os.environ.get("BOUNCIE_USERNAME")
     password = os.environ.get("BOUNCIE_PASSWORD")
     if username and password:
