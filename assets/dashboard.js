@@ -20,9 +20,21 @@ function card(label, value, sub) {
   return el;
 }
 
+function noDataBanner(message) {
+  const el = document.createElement("p");
+  el.className = "sub no-data";
+  el.textContent = message;
+  return el;
+}
+
 function renderSummary(stats) {
   const root = document.getElementById("summary");
   const t = stats.totals || {};
+  const hasTrips = (t.trips_all || 0) > 0;
+  if (!hasTrips) {
+    root.appendChild(noDataBanner("No trip history yet — will populate once the device records trips."));
+    return;
+  }
   root.append(
     card("Trips (all-time)", fmtNum(t.trips_all, 0), `${fmtNum(t.trips_7d, 0)} in last 7d`),
     card("Miles (all-time)", fmtNum(t.miles_all), `${fmtNum(t.miles_7d)} in last 7d`),
@@ -34,13 +46,12 @@ function renderSummary(stats) {
 function renderVehicles(vehicles) {
   const root = document.getElementById("vehicles");
   if (!vehicles.length) {
-    root.innerHTML = '<p class="sub">No vehicles returned.</p>';
+    root.appendChild(noDataBanner("No vehicles returned."));
     return;
   }
   for (const v of vehicles) {
     const stats = v.stats || {};
     const loc = stats.location || {};
-    // Bouncie nests make/model/year under v.model object
     const modelObj = v.model || {};
     const make = modelObj.make || "";
     const name = modelObj.name || "";
@@ -95,6 +106,11 @@ function lineChart(canvasId, labels, datasets) {
 
 function renderCharts(stats) {
   const daily = stats.daily || [];
+  const section = document.getElementById("charts-section");
+  if (!daily.length) {
+    section.style.display = "none";
+    return;
+  }
   const labels = daily.map((d) => d.date);
   lineChart("milesChart", labels, [{
     label: "Miles", data: daily.map((d) => d.miles), borderColor: "#58a6ff", backgroundColor: "rgba(88,166,255,0.2)", tension: 0.3, fill: true,
@@ -112,12 +128,13 @@ function renderCharts(stats) {
 }
 
 function renderDaily(stats) {
-  const tbody = document.querySelector("#daily tbody");
+  const section = document.getElementById("daily-section");
   const rows = [...(stats.daily || [])].reverse();
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="sub">No daily activity yet.</td></tr>';
+    section.style.display = "none";
     return;
   }
+  const tbody = section.querySelector("tbody");
   for (const d of rows) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -135,11 +152,12 @@ function renderDaily(stats) {
 }
 
 function renderHistory(history) {
-  const tbody = document.querySelector("#history tbody");
+  const section = document.getElementById("history-section");
   if (!history.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="sub">No daily snapshots yet.</td></tr>';
+    section.style.display = "none";
     return;
   }
+  const tbody = section.querySelector("tbody");
   for (const h of history) {
     const name = h.nickName || [h.year, h.make, h.model].filter(Boolean).join(" ") || h.imei;
     const mil = h.milOn === true ? '<span class="badge bad">ON</span>' :
@@ -163,11 +181,12 @@ function renderHistory(history) {
 }
 
 function renderTrips(trips) {
-  const tbody = document.querySelector("#trips tbody");
+  const section = document.getElementById("trips-section");
   if (!trips.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="sub">No trips yet.</td></tr>';
+    section.style.display = "none";
     return;
   }
+  const tbody = section.querySelector("tbody");
   for (const t of trips) {
     const start = t.startTime || t.start_ts;
     const end = t.endTime || t.end_ts;

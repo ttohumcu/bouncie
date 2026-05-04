@@ -31,7 +31,8 @@ import requests
 API_BASE = "https://api.bouncie.dev/v1"
 TOKEN_URL = "https://auth.bouncie.com/oauth/token"
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-TRIP_LOOKBACK_DAYS = 30  # how far back to query the API per run; older trips already on disk are preserved
+TRIP_LOOKBACK_DAYS = 28  # how far back to query the API per run; older trips already on disk are preserved
+TRIP_WINDOW_DAYS = 7    # max window per single API request (Bouncie enforces ≤1 week)
 
 
 def get_access_token() -> str:
@@ -263,30 +264,37 @@ def main() -> None:
     if isinstance(vehicles, dict):
         vehicles = vehicles.get("vehicles") or vehicles.get("data") or []
 
-    end = datetime.now(timezone.utc)
-    start = end - timedelta(days=TRIP_LOOKBACK_DAYS)
+    now = datetime.now(timezone.utc)
+    lookback_start = now - timedelta(days=TRIP_LOOKBACK_DAYS)
     fresh_trips: list[dict] = []
     for v in vehicles:
         imei = v.get("imei")
         if not imei:
             continue
-        try:
-            trips = api_get(
-                token,
-                "/trips",
-                params={
-                    "imei": imei,
-                    "starts-after": start.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    "ends-before": end.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                },
-            )
-            if isinstance(trips, dict):
-                trips = trips.get("trips") or trips.get("data") or []
-            for t in trips:
-                t.setdefault("imei", imei)
-            fresh_trips.extend(trips)
-        except requests.HTTPError as e:
-            print(f"::warning::Failed to fetch trips for {imei}: {e}")
+        # Walk backwards in ≤7-day windows (Bouncie API enforces max 1-week per request)
+        window_end = now
+        while window_end > lookback_start:
+            window_start = max(window_end - timedelta(days=TRIP_WINDOW_DAYS), lookback_start)
+            try:
+                trips = api_get(
+                    token,
+                    "/trips",
+                    params={
+                        "imei": imei,
+                        "starts-after": window_start.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        "ends-before": window_end.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    },
+                )
+                if isinstance(trips, dict):
+                    trips = trips.get("trips") or trips.get("data") or []
+                for t in trips:
+                    t.setdefault("imei", imei)
+                fresh_trips.extend(trips)
+                print(f"  Fetched {len(trips)} trips for {imei} {window_start.date()}–{window_end.date()}")
+            except requests.HTTPError as e:
+                print(f"::error::Trips {imei} {window_start.date()}–{window_end.date()}: {e}")
+                break  # Auth failures won't fix themselves; stop early
+            window_end = window_start
 
     existing_trips = (load_json("trips.json", {}) or {}).get("trips", [])
     merged_trips = merge_trips(existing_trips, fresh_trips)
