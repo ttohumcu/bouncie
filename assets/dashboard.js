@@ -296,6 +296,12 @@ async function renderDashboard(key) {
   }
 
   const saltB64 = meta.salt;
+  if (!saltB64) {
+    errEl.textContent = "Encrypted files not ready — run the Update Bouncie data workflow first.";
+    errEl.style.display = "block";
+    gate.style.display = "flex";
+    return;
+  }
 
   // Encrypted — check sessionStorage for cached password so user doesn't re-enter on refresh
   const cached = sessionStorage.getItem("bp");
@@ -323,7 +329,10 @@ async function renderDashboard(key) {
       sessionStorage.setItem("bp", pw);
       gate.classList.add("hidden");
       await renderDashboard(key);
-    } catch {
+    } catch (err) {
+      errEl.textContent = err?.message?.includes("fetch") || err?.message?.includes("404")
+        ? "Could not load encrypted data — try running the Update workflow."
+        : "Wrong password — try again";
       errEl.style.display = "block";
       input.value = "";
       input.focus();
