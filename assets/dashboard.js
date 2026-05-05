@@ -308,8 +308,8 @@ async function renderDashboard(key) {
   if (cached) {
     try {
       const key = await tryUnlock(cached, saltB64);
+      gate.remove();
       await renderDashboard(key);
-      gate.style.display = "none";
       return;
     } catch {
       sessionStorage.removeItem("bp");
@@ -325,8 +325,8 @@ async function renderDashboard(key) {
     try {
       const key = await tryUnlock(pw, saltB64);
       sessionStorage.setItem("bp", pw);
+      gate.remove();
       await renderDashboard(key);
-      gate.style.display = "none";
     } catch (err) {
       console.error("Unlock error:", err);
       errEl.textContent = err?.message?.includes("404")
