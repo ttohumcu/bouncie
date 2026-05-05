@@ -33,6 +33,31 @@ API_BASE = "https://api.bouncie.dev/v1"
 TOKEN_URL = "https://auth.bouncie.com/oauth/token"
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 OAUTH_FILE = DATA_DIR / "oauth.json"
+DASHBOARD_PASSWORD = os.environ.get("DASHBOARD_PASSWORD")
+
+# Files to encrypt (relative to DATA_DIR); last_updated.json stays plain so the
+# login screen can show the "last updated" timestamp without the password.
+_ENCRYPT_FILES = ["vehicles.json", "trips.json", "stats.json", "vehicle_history.json"]
+
+
+def _encrypt_file(plaintext: bytes, password: str) -> bytes:
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+    from cryptography.hazmat.primitives import hashes
+    salt = os.urandom(16)
+    iv = os.urandom(12)
+    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100_000)
+    key = kdf.derive(password.encode())
+    ciphertext = AESGCM(key).encrypt(iv, plaintext, None)
+    return salt + iv + ciphertext
+
+
+def encrypt_data_files() -> None:
+    for name in _ENCRYPT_FILES:
+        src = DATA_DIR / name
+        if src.exists():
+            (DATA_DIR / (name + ".enc")).write_bytes(_encrypt_file(src.read_bytes(), DASHBOARD_PASSWORD))
+    print("Encrypted data files written.")
 TRIP_LOOKBACK_DAYS = 28  # how far back to query the API per run; older trips already on disk are preserved
 TRIP_WINDOW_DAYS = 7    # max window per single API request (Bouncie enforces ≤1 week)
 
@@ -346,7 +371,13 @@ def main() -> None:
     (DATA_DIR / "trips.json").write_text(json.dumps({"trips": merged_trips, "updated_at": updated_at}, indent=2))
     (DATA_DIR / "vehicle_history.json").write_text(json.dumps({"history": history, "updated_at": updated_at}, indent=2))
     (DATA_DIR / "stats.json").write_text(json.dumps({**stats, "updated_at": updated_at}, indent=2))
-    (DATA_DIR / "last_updated.json").write_text(json.dumps({"updated_at": updated_at}, indent=2))
+    (DATA_DIR / "last_updated.json").write_text(json.dumps({
+        "updated_at": updated_at,
+        "encrypted": bool(DASHBOARD_PASSWORD),
+    }, indent=2))
+
+    if DASHBOARD_PASSWORD:
+        encrypt_data_files()
 
     print(f"Wrote {len(vehicles)} vehicles, {len(merged_trips)} trips, {len(history)} history rows at {updated_at}")
 

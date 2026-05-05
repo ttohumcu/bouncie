@@ -43,6 +43,7 @@ jobs:
           BOUNCIE_REDIRECT_URI: ${{ secrets.BOUNCIE_REDIRECT_URI }}
           BOUNCIE_REFRESH_TOKEN: ${{ secrets.BOUNCIE_REFRESH_TOKEN }}
           BOUNCIE_AUTH_CODE: ${{ inputs.auth_code || secrets.BOUNCIE_AUTH_CODE }}
+          DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
         run: python scripts/fetch.py
 
       # Always commit data/oauth.json even if the rest of the run failed,
@@ -75,12 +76,20 @@ jobs:
 
       - name: Build site
         if: steps.fetch.outcome == 'success'
+        env:
+          DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
         run: |
           mkdir -p _site/data _site/assets
           cp index.html .nojekyll _site/
           cp assets/* _site/assets/
-          cp data/vehicles.json data/trips.json data/stats.json \
-             data/vehicle_history.json data/last_updated.json _site/data/
+          cp data/last_updated.json _site/data/
+          if [ -n "$DASHBOARD_PASSWORD" ]; then
+            cp data/vehicles.json.enc data/trips.json.enc data/stats.json.enc \
+               data/vehicle_history.json.enc _site/data/
+          else
+            cp data/vehicles.json data/trips.json data/stats.json \
+               data/vehicle_history.json _site/data/
+          fi
 
       - name: Upload Pages artifact
         if: steps.fetch.outcome == 'success'

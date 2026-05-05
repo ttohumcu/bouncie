@@ -75,3 +75,30 @@ tbody tr:last-child td { border-bottom: 0; }
 .badge.bad { background: rgba(248,81,73,0.15); color: var(--bad); }
 
 a { color: var(--accent); }
+
+#auth-gate {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+#auth-gate.hidden { display: none; }
+.auth-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 12px; padding: 2rem; max-width: 360px; width: 90%;
+  text-align: center;
+}
+.auth-card h2 { margin: 0 0 0.25rem; }
+.auth-card #auth-updated { color: var(--muted); font-size: 0.85rem; margin: 0 0 1.5rem; }
+.auth-card input {
+  display: block; width: 100%; padding: 0.65rem 1rem;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+.auth-card button {
+  width: 100%; padding: 0.65rem; background: var(--accent);
+  color: #fff; border: none; border-radius: 6px;
+  font-size: 1rem; font-weight: 600; cursor: pointer;
+}
+.auth-card button:hover { opacity: 0.9; }
+#auth-error { color: var(--bad); font-size: 0.85rem; margin: 0.75rem 0 0; display: none; }

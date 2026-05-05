@@ -13,6 +13,43 @@ async function fetchJson(path) {
   return res.json();
 }
 
+async function fetchEncrypted(path, key) {
+  const res = await fetch(`${path}?t=${Date.now()}`);
+  if (!res.ok) throw new Error(`${path}: ${res.status}`);
+  const buf = new Uint8Array(await res.arrayBuffer());
+  const iv = buf.slice(16, 28);
+  const ciphertext = buf.slice(28);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+
+async function deriveKey(password, salt) {
+  const raw = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations: 100_000, hash: "SHA-256" },
+    raw,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["decrypt"]
+  );
+}
+
+// Fetch salt from vehicles.json.enc header, derive key, verify by decrypting.
+async function tryUnlock(password) {
+  const res = await fetch(`data/vehicles.json.enc?t=${Date.now()}`);
+  if (!res.ok) throw new Error("vehicles.json.enc not found");
+  const buf = new Uint8Array(await res.arrayBuffer());
+  const salt = buf.slice(0, 16);
+  const iv = buf.slice(16, 28);
+  const ciphertext = buf.slice(28);
+  const key = await deriveKey(password, salt);
+  // AES-GCM throws if password is wrong (auth tag mismatch)
+  await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+  return key;
+}
+
 function card(label, value, sub) {
   const el = document.createElement("div");
   el.className = "card";
@@ -208,24 +245,97 @@ function renderTrips(trips) {
   }
 }
 
-(async () => {
-  try {
-    const [vehicles, trips, stats, history] = await Promise.all([
+async function renderDashboard(key) {
+  let vehicles, trips, stats, history;
+  if (key) {
+    [vehicles, trips, stats, history] = await Promise.all([
+      fetchEncrypted("data/vehicles.json.enc", key),
+      fetchEncrypted("data/trips.json.enc", key),
+      fetchEncrypted("data/stats.json.enc", key),
+      fetchEncrypted("data/vehicle_history.json.enc", key).catch(() => ({ history: [] })),
+    ]);
+  } else {
+    [vehicles, trips, stats, history] = await Promise.all([
       fetchJson("data/vehicles.json"),
       fetchJson("data/trips.json"),
       fetchJson("data/stats.json"),
       fetchJson("data/vehicle_history.json").catch(() => ({ history: [] })),
     ]);
-    document.getElementById("updated").textContent = `Last updated: ${fmtDate(stats.updated_at)}`;
-    renderSummary(stats);
-    renderVehicles(vehicles.vehicles || []);
-    renderCharts(stats);
-    renderDaily(stats);
-    renderHistory(history.history || []);
-    renderTrips(trips.trips || []);
-  } catch (err) {
-    document.getElementById("updated").textContent =
-      "No data yet. Run the GitHub Action once to populate data/*.json.";
-    console.error(err);
   }
+  document.getElementById("updated").textContent = `Last updated: ${fmtDate(stats.updated_at)}`;
+  renderSummary(stats);
+  renderVehicles(vehicles.vehicles || []);
+  renderCharts(stats);
+  renderDaily(stats);
+  renderHistory(history.history || []);
+  renderTrips(trips.trips || []);
+}
+
+(async () => {
+  const gate = document.getElementById("auth-gate");
+  const input = document.getElementById("auth-input");
+  const btn = document.getElementById("auth-btn");
+  const errEl = document.getElementById("auth-error");
+  const authUpdated = document.getElementById("auth-updated");
+
+  let meta;
+  try {
+    meta = await fetchJson("data/last_updated.json");
+    authUpdated.textContent = `Last updated: ${fmtDate(meta.updated_at)}`;
+  } catch {
+    authUpdated.textContent = "";
+    meta = {};
+  }
+
+  if (!meta.encrypted) {
+    gate.classList.add("hidden");
+    try {
+      await renderDashboard(null);
+    } catch (err) {
+      document.getElementById("updated").textContent =
+        "No data yet. Run the GitHub Action once to populate data/*.json.";
+      console.error(err);
+    }
+    return;
+  }
+
+  // Encrypted — check sessionStorage for cached password so user doesn't re-enter on refresh
+  const cached = sessionStorage.getItem("bp");
+  if (cached) {
+    try {
+      const key = await tryUnlock(cached);
+      gate.classList.add("hidden");
+      await renderDashboard(key);
+      return;
+    } catch {
+      sessionStorage.removeItem("bp");
+    }
+  }
+
+  gate.style.display = "flex";
+
+  async function attemptUnlock() {
+    const pw = input.value;
+    if (!pw) return;
+    btn.disabled = true;
+    btn.textContent = "Unlocking…";
+    errEl.style.display = "none";
+    try {
+      const key = await tryUnlock(pw);
+      sessionStorage.setItem("bp", pw);
+      gate.classList.add("hidden");
+      await renderDashboard(key);
+    } catch {
+      errEl.style.display = "block";
+      input.value = "";
+      input.focus();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Unlock";
+    }
+  }
+
+  btn.addEventListener("click", attemptUnlock);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") attemptUnlock(); });
+  input.focus();
 })();
