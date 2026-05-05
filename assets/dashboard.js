@@ -308,15 +308,13 @@ async function renderDashboard(key) {
   if (cached) {
     try {
       const key = await tryUnlock(cached, saltB64);
-      gate.classList.add("hidden");
       await renderDashboard(key);
+      gate.style.display = "none";
       return;
     } catch {
       sessionStorage.removeItem("bp");
     }
   }
-
-  gate.style.display = "flex";
 
   async function attemptUnlock() {
     const pw = input.value;
@@ -327,11 +325,12 @@ async function renderDashboard(key) {
     try {
       const key = await tryUnlock(pw, saltB64);
       sessionStorage.setItem("bp", pw);
-      gate.classList.add("hidden");
       await renderDashboard(key);
+      gate.style.display = "none";
     } catch (err) {
-      errEl.textContent = err?.message?.includes("fetch") || err?.message?.includes("404")
-        ? "Could not load encrypted data — try running the Update workflow."
+      console.error("Unlock error:", err);
+      errEl.textContent = err?.message?.includes("404")
+        ? "Could not load encrypted data — run the Update workflow first."
         : "Wrong password — try again";
       errEl.style.display = "block";
       input.value = "";
