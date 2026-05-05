@@ -9,15 +9,15 @@
       "model": "Accord",
       "year": 2023,
       "odometer": 35747,
-      "fuelLevel": 22.58923409733681,
+      "fuelLevel": 20.30065274164777,
       "isRunning": true,
       "battery": null,
       "milOn": false,
-      "speed": 0,
-      "heading": 182,
-      "lat": 28.054986,
-      "lon": -82.455224,
-      "lastUpdated": "2026-05-05T01:19:18.000Z"
+      "speed": 8.1,
+      "heading": 318,
+      "lat": 28.057667,
+      "lon": -82.428018,
+      "lastUpdated": "2026-05-05T01:24:58.000Z"
     },
     {
       "date": "2026-05-04",
@@ -39,5 +39,5 @@
       "lastUpdated": "2026-05-04T22:14:40.000Z"
     }
   ],
-  "updated_at": "2026-05-05T01:19:26.597908+00:00"
+  "updated_at": "2026-05-05T01:25:31.476386+00:00"
 }
