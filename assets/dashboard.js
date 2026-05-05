@@ -17,13 +17,15 @@ async function fetchEncrypted(path, key) {
   const res = await fetch(`${path}?t=${Date.now()}`);
   if (!res.ok) throw new Error(`${path}: ${res.status}`);
   const buf = new Uint8Array(await res.arrayBuffer());
-  const iv = buf.slice(16, 28);
-  const ciphertext = buf.slice(28);
+  // Format: iv (12 bytes) + ciphertext; salt is shared and stored in last_updated.json
+  const iv = buf.slice(0, 12);
+  const ciphertext = buf.slice(12);
   const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
-async function deriveKey(password, salt) {
+async function deriveKey(password, saltB64) {
+  const salt = Uint8Array.from(atob(saltB64), (c) => c.charCodeAt(0));
   const raw = await crypto.subtle.importKey(
     "raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]
   );
@@ -36,17 +38,11 @@ async function deriveKey(password, salt) {
   );
 }
 
-// Fetch salt from vehicles.json.enc header, derive key, verify by decrypting.
-async function tryUnlock(password) {
-  const res = await fetch(`data/vehicles.json.enc?t=${Date.now()}`);
-  if (!res.ok) throw new Error("vehicles.json.enc not found");
-  const buf = new Uint8Array(await res.arrayBuffer());
-  const salt = buf.slice(0, 16);
-  const iv = buf.slice(16, 28);
-  const ciphertext = buf.slice(28);
-  const key = await deriveKey(password, salt);
-  // AES-GCM throws if password is wrong (auth tag mismatch)
-  await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+// Derive key from salt in last_updated.json, verify by decrypting vehicles.json.enc.
+async function tryUnlock(password, saltB64) {
+  const key = await deriveKey(password, saltB64);
+  // AES-GCM throws on wrong password (auth tag mismatch)
+  await fetchEncrypted("data/vehicles.json.enc", key);
   return key;
 }
 
@@ -299,11 +295,13 @@ async function renderDashboard(key) {
     return;
   }
 
+  const saltB64 = meta.salt;
+
   // Encrypted — check sessionStorage for cached password so user doesn't re-enter on refresh
   const cached = sessionStorage.getItem("bp");
   if (cached) {
     try {
-      const key = await tryUnlock(cached);
+      const key = await tryUnlock(cached, saltB64);
       gate.classList.add("hidden");
       await renderDashboard(key);
       return;
@@ -321,7 +319,7 @@ async function renderDashboard(key) {
     btn.textContent = "Unlocking…";
     errEl.style.display = "none";
     try {
-      const key = await tryUnlock(pw);
+      const key = await tryUnlock(pw, saltB64);
       sessionStorage.setItem("bp", pw);
       gate.classList.add("hidden");
       await renderDashboard(key);

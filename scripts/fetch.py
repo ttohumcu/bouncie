@@ -40,24 +40,24 @@ DASHBOARD_PASSWORD = os.environ.get("DASHBOARD_PASSWORD")
 _ENCRYPT_FILES = ["vehicles.json", "trips.json", "stats.json", "vehicle_history.json"]
 
 
-def _encrypt_file(plaintext: bytes, password: str) -> bytes:
+def encrypt_data_files(password: str) -> str:
+    """Encrypt all data files with one shared salt; return salt as base64 for last_updated.json."""
+    import base64
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
     from cryptography.hazmat.primitives import hashes
     salt = os.urandom(16)
-    iv = os.urandom(12)
     kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100_000)
     key = kdf.derive(password.encode())
-    ciphertext = AESGCM(key).encrypt(iv, plaintext, None)
-    return salt + iv + ciphertext
-
-
-def encrypt_data_files() -> None:
+    aesgcm = AESGCM(key)
     for name in _ENCRYPT_FILES:
         src = DATA_DIR / name
         if src.exists():
-            (DATA_DIR / (name + ".enc")).write_bytes(_encrypt_file(src.read_bytes(), DASHBOARD_PASSWORD))
+            iv = os.urandom(12)
+            ciphertext = aesgcm.encrypt(iv, src.read_bytes(), None)
+            (DATA_DIR / (name + ".enc")).write_bytes(iv + ciphertext)
     print("Encrypted data files written.")
+    return base64.b64encode(salt).decode()
 TRIP_LOOKBACK_DAYS = 28  # how far back to query the API per run; older trips already on disk are preserved
 TRIP_WINDOW_DAYS = 7    # max window per single API request (Bouncie enforces ≤1 week)
 
@@ -371,13 +371,12 @@ def main() -> None:
     (DATA_DIR / "trips.json").write_text(json.dumps({"trips": merged_trips, "updated_at": updated_at}, indent=2))
     (DATA_DIR / "vehicle_history.json").write_text(json.dumps({"history": history, "updated_at": updated_at}, indent=2))
     (DATA_DIR / "stats.json").write_text(json.dumps({**stats, "updated_at": updated_at}, indent=2))
+    salt_b64 = encrypt_data_files(DASHBOARD_PASSWORD) if DASHBOARD_PASSWORD else None
     (DATA_DIR / "last_updated.json").write_text(json.dumps({
         "updated_at": updated_at,
         "encrypted": bool(DASHBOARD_PASSWORD),
+        **({"salt": salt_b64} if salt_b64 else {}),
     }, indent=2))
-
-    if DASHBOARD_PASSWORD:
-        encrypt_data_files()
 
     print(f"Wrote {len(vehicles)} vehicles, {len(merged_trips)} trips, {len(history)} history rows at {updated_at}")
 
