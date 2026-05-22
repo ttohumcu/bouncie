@@ -11,24 +11,24 @@
       "imei": "865612071401950",
       "stats": {
         "localTimeZone": "-0400",
-        "lastUpdated": "2026-05-21T23:00:55.000Z",
+        "lastUpdated": "2026-05-22T02:28:18.000Z",
         "odometer": 36669,
         "location": {
-          "lat": 28.186804,
-          "lon": -82.412466,
-          "heading": 203,
-          "address": "2194 Argosy Dr, Land O Lakes, FL 34639, USA"
+          "lat": 28.057323,
+          "lon": -82.42765,
+          "heading": 7,
+          "address": null
         },
-        "fuelLevel": 70.63012013572674,
-        "isRunning": false,
-        "speed": 0,
+        "fuelLevel": 63.564060973556295,
+        "isRunning": true,
+        "speed": 11.2,
         "mil": {
           "milOn": false,
-          "lastUpdated": "2026-05-21T22:40:42.902Z",
+          "lastUpdated": "2026-05-22T02:13:25.000Z",
           "qualifiedDtcList": []
         }
       }
     }
   ],
-  "updated_at": "2026-05-22T02:05:00.738929+00:00"
+  "updated_at": "2026-05-22T07:34:48.537042+00:00"
 }
