@@ -11,24 +11,24 @@
       "imei": "865612071401950",
       "stats": {
         "localTimeZone": "-0400",
-        "lastUpdated": "2026-06-25T17:32:55.000Z",
-        "odometer": 38417.4,
+        "lastUpdated": "2026-06-25T23:53:18.000Z",
+        "odometer": 38425,
         "location": {
-          "lat": 27.251554,
-          "lon": -82.453702,
-          "heading": 319,
+          "lat": 27.282154,
+          "lon": -82.531663,
+          "heading": 358,
           "address": null
         },
-        "fuelLevel": 73.54503074233888,
+        "fuelLevel": 72.62724169050018,
         "isRunning": false,
         "speed": 0,
         "mil": {
           "milOn": false,
-          "lastUpdated": "2026-06-25T17:28:50.000Z",
+          "lastUpdated": "2026-06-25T23:34:51.000Z",
           "qualifiedDtcList": []
         }
       }
     }
   ],
-  "updated_at": "2026-06-25T21:20:09.756635+00:00"
+  "updated_at": "2026-06-26T02:06:22.037978+00:00"
 }
