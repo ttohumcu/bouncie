@@ -11,24 +11,24 @@
       "imei": "865612071401950",
       "stats": {
         "localTimeZone": "-0400",
-        "lastUpdated": "2026-06-29T16:53:46.000Z",
-        "odometer": 38755.5,
+        "lastUpdated": "2026-06-29T21:00:56.000Z",
+        "odometer": 38802.1,
         "location": {
-          "lat": 26.939243,
-          "lon": -82.3436,
-          "heading": 119,
-          "address": "1350 Oxford Dr, Englewood, FL 34223, USA"
+          "lat": 27.251574,
+          "lon": -82.453767,
+          "heading": 1,
+          "address": null
         },
-        "fuelLevel": 85.69669468459276,
+        "fuelLevel": 73.94657908776186,
         "isRunning": false,
         "speed": 0,
         "mil": {
           "milOn": false,
-          "lastUpdated": "2026-06-29T16:17:13.000Z",
+          "lastUpdated": "2026-06-29T20:21:36.000Z",
           "qualifiedDtcList": []
         }
       }
     }
   ],
-  "updated_at": "2026-06-29T18:02:33.997294+00:00"
+  "updated_at": "2026-06-29T21:15:24.237341+00:00"
 }
