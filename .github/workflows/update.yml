@@ -93,12 +93,19 @@ jobs:
                data/vehicle_history.json _site/data/
           fi
 
+      - name: Package site for Pages
+        if: steps.fetch.outcome == 'success'
+        run: tar --dereference --hard-dereference --directory _site -cvf artifact.tar .
+
       - name: Upload Pages artifact
         if: steps.fetch.outcome == 'success'
         id: upload
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
-          path: _site
+          name: github-pages
+          path: artifact.tar
+          if-no-files-found: error
+          retention-days: 1
 
   deploy:
     needs: fetch
