@@ -17,7 +17,7 @@
           "lat": 27.266365,
           "lon": -82.466887,
           "heading": 78,
-          "address": null
+          "address": "8010 Palmer Plaza Blvd, Sarasota, FL 34233, USA"
         },
         "fuelLevel": 49.411764705882355,
         "isRunning": false,
@@ -30,5 +30,5 @@
       }
     }
   ],
-  "updated_at": "2026-07-13T13:58:52.956070+00:00"
+  "updated_at": "2026-07-13T17:47:09.115456+00:00"
 }
