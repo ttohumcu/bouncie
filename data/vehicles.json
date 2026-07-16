@@ -11,24 +11,24 @@
       "imei": "865612071401950",
       "stats": {
         "localTimeZone": "-0400",
-        "lastUpdated": "2026-07-16T02:07:14.000Z",
-        "odometer": 39624.8,
+        "lastUpdated": "2026-07-16T17:00:24.000Z",
+        "odometer": 39637.9,
         "location": {
-          "lat": 27.251518,
-          "lon": -82.453696,
-          "heading": 277,
-          "address": "6275 Anise Dr, Sarasota, FL 34238, USA"
+          "lat": 27.231876,
+          "lon": -82.460386,
+          "heading": 181,
+          "address": null
         },
-        "fuelLevel": 28.71826071216397,
-        "isRunning": false,
-        "speed": 0,
+        "fuelLevel": 27.211317035021906,
+        "isRunning": true,
+        "speed": 48.5,
         "mil": {
           "milOn": false,
-          "lastUpdated": "2026-07-16T01:52:11.000Z",
+          "lastUpdated": "2026-07-16T16:58:11.000Z",
           "qualifiedDtcList": []
         }
       }
     }
   ],
-  "updated_at": "2026-07-16T13:14:37.256161+00:00"
+  "updated_at": "2026-07-16T17:00:31.052564+00:00"
 }
