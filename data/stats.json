@@ -2,7 +2,7 @@
   "totals": {
     "trips_all": 593,
     "trips_7d": 41,
-    "trips_30d": 169,
+    "trips_30d": 168,
     "miles_all": 5017.5,
     "miles_7d": 312.5,
     "miles_30d": 1731.5,
@@ -1027,5 +1027,5 @@
     }
   ],
   "vehicle_count": 1,
-  "updated_at": "2026-07-17T12:58:52.071546+00:00"
+  "updated_at": "2026-07-17T16:57:03.701926+00:00"
 }
