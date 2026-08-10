@@ -1,6 +1,84 @@
 {
   "trips": [
     {
+      "transactionId": "865612071401950-880-202608",
+      "hardBrakingCount": 0,
+      "hardAccelerationCount": 0,
+      "distance": 0,
+      "gps": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -82.45358,
+            27.25137
+          ],
+          [
+            -82.45361,
+            27.25136
+          ],
+          [
+            -82.45361,
+            27.25136
+          ]
+        ]
+      },
+      "startTime": "2026-08-10T12:14:36.000Z",
+      "endTime": "2026-08-10T12:14:52.000Z",
+      "startOdometer": 40500,
+      "endOdometer": 40500,
+      "averageSpeed": 0,
+      "maxSpeed": 0.621371,
+      "fuelConsumed": 0,
+      "timeZone": "-0400",
+      "totalIdleDuration": 3,
+      "imei": "865612071401950"
+    },
+    {
+      "transactionId": "865612071401950-879-202608",
+      "hardBrakingCount": 0,
+      "hardAccelerationCount": 0,
+      "distance": 0,
+      "gps": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -82.45373,
+            27.25141
+          ],
+          [
+            -82.45374,
+            27.25137
+          ],
+          [
+            -82.45369,
+            27.25138
+          ],
+          [
+            -82.45367,
+            27.25138
+          ],
+          [
+            -82.45362,
+            27.25137
+          ],
+          [
+            -82.45362,
+            27.25137
+          ]
+        ]
+      },
+      "startTime": "2026-08-10T12:12:09.000Z",
+      "endTime": "2026-08-10T12:12:36.000Z",
+      "startOdometer": 40500,
+      "endOdometer": 40500,
+      "averageSpeed": 3.1,
+      "maxSpeed": 5.6,
+      "fuelConsumed": 0,
+      "timeZone": "-0400",
+      "totalIdleDuration": 6,
+      "imei": "865612071401950"
+    },
+    {
       "transactionId": "865612071401950-878-202608",
       "hardBrakingCount": 0,
       "hardAccelerationCount": 0,
@@ -587534,5 +587612,5 @@
       "imei": "865612071401950"
     }
   ],
-  "updated_at": "2026-08-10T09:04:46.021698+00:00"
+  "updated_at": "2026-08-10T12:40:10.717663+00:00"
 }
