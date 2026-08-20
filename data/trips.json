@@ -1,6 +1,59 @@
 {
   "trips": [
     {
+      "transactionId": "865612071401950-967-202608",
+      "hardBrakingCount": 0,
+      "hardAccelerationCount": 0,
+      "distance": 0,
+      "gps": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -82.45358,
+            27.25148
+          ],
+          [
+            -82.45362,
+            27.25147
+          ],
+          [
+            -82.45365,
+            27.25147
+          ],
+          [
+            -82.45364,
+            27.25147
+          ],
+          [
+            -82.4536,
+            27.25154
+          ],
+          [
+            -82.4536,
+            27.25156
+          ],
+          [
+            -82.4536,
+            27.25164
+          ],
+          [
+            -82.4536,
+            27.25164
+          ]
+        ]
+      },
+      "startTime": "2026-08-20T16:36:29.000Z",
+      "endTime": "2026-08-20T16:37:25.000Z",
+      "startOdometer": 41350,
+      "endOdometer": 41350,
+      "averageSpeed": 2.4,
+      "maxSpeed": 6.2,
+      "fuelConsumed": 0,
+      "timeZone": "-0400",
+      "totalIdleDuration": 27,
+      "imei": "865612071401950"
+    },
+    {
       "transactionId": "865612071401950-966-202608",
       "hardBrakingCount": 0,
       "hardAccelerationCount": 0,
@@ -695146,5 +695199,5 @@
       "imei": "865612071401950"
     }
   ],
-  "updated_at": "2026-08-20T16:20:06.528470+00:00"
+  "updated_at": "2026-08-20T20:15:30.617153+00:00"
 }
