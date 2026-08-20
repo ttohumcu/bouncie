@@ -1,13 +1,13 @@
 {
   "totals": {
     "trips_all": 761,
-    "trips_7d": 57,
+    "trips_7d": 56,
     "trips_30d": 158,
     "miles_all": 6628.7,
-    "miles_7d": 587.4,
+    "miles_7d": 579.0,
     "miles_30d": 1470.2,
     "fuel_all": 162.44,
-    "fuel_7d": 16.9,
+    "fuel_7d": 16.72,
     "fuel_30d": 40.86,
     "hard_brakes_all": 207,
     "hard_accels_all": 245,
@@ -1267,5 +1267,5 @@
     }
   ],
   "vehicle_count": 1,
-  "updated_at": "2026-08-20T00:32:30.719096+00:00"
+  "updated_at": "2026-08-20T04:24:33.771788+00:00"
 }
