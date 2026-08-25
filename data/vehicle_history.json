@@ -1,6 +1,25 @@
 {
   "history": [
     {
+      "date": "2026-08-25",
+      "imei": "865612071401950",
+      "nickName": "Accord",
+      "vin": "1HGCY2F56PA059578",
+      "make": "Honda",
+      "model": "Accord",
+      "year": 2023,
+      "odometer": 41643.7,
+      "fuelLevel": 51.96964129879927,
+      "isRunning": false,
+      "battery": null,
+      "milOn": false,
+      "speed": 0,
+      "heading": 230,
+      "lat": 27.299827,
+      "lon": -82.515814,
+      "lastUpdated": "2026-08-24T21:36:14.000Z"
+    },
+    {
       "date": "2026-08-24",
       "imei": "865612071401950",
       "nickName": "Accord",
@@ -2148,5 +2167,5 @@
       "lastUpdated": "2026-05-04T22:14:40.000Z"
     }
   ],
-  "updated_at": "2026-08-24T20:16:25.817838+00:00"
+  "updated_at": "2026-08-25T00:33:39.692510+00:00"
 }
