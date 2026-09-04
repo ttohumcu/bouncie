@@ -131,6 +131,69 @@ function initMap(trips, vehicles) {
   }
 }
 
+// ── Date filter ──────────────────────────────────────────────────────────────
+const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function attachDateFilters(section) {
+  const rows = [...section.querySelectorAll("tbody tr[data-date]")];
+  if (rows.length < 10) return;
+
+  const yearMonths = new Map();
+  for (const r of rows) {
+    const d = r.dataset.date;
+    if (!d) continue;
+    const y = d.slice(0, 4), m = d.slice(5, 7);
+    if (!yearMonths.has(y)) yearMonths.set(y, new Set());
+    yearMonths.get(y).add(m);
+  }
+  const years = [...yearMonths.keys()].sort().reverse();
+  if (!years.length) return;
+
+  const wrap = document.createElement("div");
+  wrap.className = "table-filters";
+
+  const yearSel = document.createElement("select");
+  yearSel.className = "filter-select";
+  yearSel.innerHTML = `<option value="">All years</option>` +
+    years.map(y => `<option value="${y}">${y}</option>`).join("");
+
+  const monthSel = document.createElement("select");
+  monthSel.className = "filter-select";
+
+  const countEl = document.createElement("span");
+  countEl.className = "filter-count";
+
+  function updateMonths() {
+    const y = yearSel.value;
+    const set = y ? yearMonths.get(y) : new Set([...yearMonths.values()].flatMap(s => [...s]));
+    const months = [...set].sort();
+    monthSel.innerHTML = `<option value="">All months</option>` +
+      months.map(m => `<option value="${m}">${MONTH_NAMES[+m - 1]}</option>`).join("");
+  }
+
+  function applyFilter() {
+    const y = yearSel.value, m = monthSel.value;
+    let n = 0;
+    for (const r of rows) {
+      const d = r.dataset.date || "";
+      const show = (!y || d.startsWith(y)) && (!m || d.slice(5, 7) === m);
+      r.hidden = !show;
+      if (show) n++;
+    }
+    countEl.textContent = `${n} of ${rows.length}`;
+  }
+
+  updateMonths();
+  applyFilter();
+
+  yearSel.addEventListener("change", () => { updateMonths(); applyFilter(); });
+  monthSel.addEventListener("change", applyFilter);
+
+  const lbl = (t) => Object.assign(document.createElement("span"), { textContent: t, className: "filter-label" });
+  wrap.append(lbl("Year"), yearSel, lbl("Month"), monthSel, countEl);
+  section.querySelector(".table-wrap").before(wrap);
+}
+
 // ── Render functions ─────────────────────────────────────────────────────────
 
 function renderSummary(stats) {
@@ -251,6 +314,7 @@ function renderDaily(stats) {
   const tbody = section.querySelector("tbody");
   for (const d of rows) {
     const tr = document.createElement("tr");
+    tr.dataset.date = d.date;
     tr.innerHTML = `
       <td>${d.date}</td>
       <td>${fmtNum(d.trips, 0)}</td>
@@ -265,6 +329,7 @@ function renderDaily(stats) {
     `;
     tbody.appendChild(tr);
   }
+  attachDateFilters(section);
 }
 
 function renderHistory(history) {
@@ -282,6 +347,7 @@ function renderHistory(history) {
       ? `<a href="https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lon}" target="_blank" rel="noopener">map</a>`
       : "—";
     const tr = document.createElement("tr");
+    tr.dataset.date = h.date;
     tr.innerHTML = `
       <td>${h.date}</td>
       <td>${name}</td>
@@ -294,6 +360,7 @@ function renderHistory(history) {
     `;
     tbody.appendChild(tr);
   }
+  attachDateFilters(section);
 }
 
 function renderTrips(trips) {
@@ -319,8 +386,10 @@ function renderTrips(trips) {
     const hasRoute = t.gps?.coordinates?.length >= 2;
     const txId = t.transactionId || "";
 
+    const dateStr = start ? new Date(start).toISOString().slice(0, 10) : "";
     const tr = document.createElement("tr");
     tr.dataset.txid = txId;
+    tr.dataset.date = dateStr;
     if (hasRoute) tr.classList.add("has-route");
     tr.innerHTML = `
       <td>${fmtDate(start)}</td>
@@ -346,6 +415,7 @@ function renderTrips(trips) {
 
     tbody.appendChild(tr);
   }
+  attachDateFilters(section);
 }
 
 async function renderDashboard(key) {

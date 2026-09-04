@@ -92,6 +92,18 @@ a { color: var(--accent); }
 .leaflet-popup-content-wrapper { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
 .leaflet-popup-tip { background: var(--panel); }
 
+.table-filters {
+  display: flex; align-items: center; gap: 0.5rem;
+  flex-wrap: wrap; margin-bottom: 0.75rem;
+}
+.filter-label { color: var(--muted); font-size: 0.85rem; }
+.filter-select {
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 0.3rem 0.6rem; font-size: 0.85rem; cursor: pointer;
+}
+.filter-count { color: var(--muted); font-size: 0.8rem; margin-left: 0.25rem; }
+
 tbody tr.has-route { cursor: pointer; }
 tbody tr.has-route:hover { background: rgba(88,166,255,0.06); }
 tbody tr.row-active { background: rgba(248,81,73,0.12) !important; }
