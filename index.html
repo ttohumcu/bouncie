@@ -21,6 +21,17 @@
       </div>
     </div>
 
+    <nav id="top-nav">
+      <a href="#summary">Summary</a>
+      <a href="#vehicles-section">Vehicles</a>
+      <a href="#map-section">Map</a>
+      <a href="#charts-section">Charts</a>
+      <a href="#patterns-section">Patterns</a>
+      <a href="#daily-section">Daily</a>
+      <a href="#history-section">History</a>
+      <a href="#trips-section">Trips</a>
+    </nav>
+
     <header>
       <h1>Adam's Bouncie</h1>
       <p id="updated">Loading…</p>
@@ -28,7 +39,7 @@
 
     <section id="summary" class="grid"></section>
 
-    <section>
+    <section id="vehicles-section">
       <h2>Vehicles (current)</h2>
       <div id="vehicles" class="grid"></div>
     </section>
@@ -43,9 +54,24 @@
       <h2>All-time daily activity</h2>
       <div class="charts">
         <div class="chart-card"><canvas id="milesChart"></canvas></div>
+        <div class="chart-card"><canvas id="cumMilesChart"></canvas></div>
         <div class="chart-card"><canvas id="tripsChart"></canvas></div>
         <div class="chart-card"><canvas id="fuelChart"></canvas></div>
+        <div class="chart-card"><canvas id="mpgChart"></canvas></div>
+        <div class="chart-card"><canvas id="avgSpeedChart"></canvas></div>
+        <div class="chart-card"><canvas id="idlePctChart"></canvas></div>
         <div class="chart-card"><canvas id="behaviorChart"></canvas></div>
+      </div>
+    </section>
+
+    <section id="patterns-section">
+      <h2>Driving patterns</h2>
+      <p class="sub">Aggregated across all recorded trips.</p>
+      <div class="charts">
+        <div class="chart-card"><canvas id="dowChart"></canvas></div>
+        <div class="chart-card"><canvas id="hodChart"></canvas></div>
+        <div class="chart-card"><canvas id="monthlyMilesChart"></canvas></div>
+        <div class="chart-card"><canvas id="tripDistChart"></canvas></div>
       </div>
     </section>
 

@@ -211,6 +211,33 @@ function renderSummary(stats) {
     card("Idle (all-time)", `${fmtNum(t.idle_all, 0)} min`, `${fmtNum(t.idle_7d, 0)} min in last 7d`),
     card("Hard events (all-time)", `${fmtNum(t.hard_brakes_all, 0)} / ${fmtNum(t.hard_accels_all, 0)}`, "brakes / accels"),
   );
+
+  // Derived stats computed client-side
+  const daily = stats.daily || [];
+  if (daily.length > 0) {
+    const avgMpg = t.fuel_all > 0 ? Math.round(t.miles_all / t.fuel_all * 10) / 10 : null;
+    const avgMilesPerDay = Math.round(t.miles_all / daily.length * 10) / 10;
+    const bestDay = daily.reduce((b, d) => d.miles > b.miles ? d : b, { miles: 0, date: "" });
+
+    let maxStreak = 0, curStreak = 0, prevDate = null;
+    for (const d of daily) {
+      if (prevDate) {
+        const diff = Math.round((new Date(d.date) - new Date(prevDate)) / 86400000);
+        curStreak = diff === 1 ? curStreak + 1 : 1;
+      } else {
+        curStreak = 1;
+      }
+      if (curStreak > maxStreak) maxStreak = curStreak;
+      prevDate = d.date;
+    }
+
+    if (avgMpg != null) root.append(card("Avg MPG", fmtNum(avgMpg, 1), "miles per gallon"));
+    root.append(
+      card("Avg miles / drive day", fmtNum(avgMilesPerDay), `over ${daily.length} days`),
+      card("Longest streak", `${maxStreak} day${maxStreak !== 1 ? "s" : ""}`, "consecutive days with trips"),
+    );
+    if (bestDay.miles > 0) root.append(card("Best single day", `${fmtNum(bestDay.miles)} mi`, bestDay.date));
+  }
 }
 
 function renderVehicles(vehicles) {
@@ -247,6 +274,7 @@ function renderVehicles(vehicles) {
     const el = document.createElement("div");
     el.className = "card";
     el.innerHTML = `
+      ${CAR_SVG}
       <div class="label">${displayName} ${milStatus} ${running}</div>
       <div class="value">${[year, make, name].filter(Boolean).join(" ")}</div>
       <div class="sub">VIN: ${v.vin || "—"}</div>
@@ -262,6 +290,29 @@ function renderVehicles(vehicles) {
   }
 }
 
+const CAR_SVG = `<svg viewBox="0 0 300 110" width="100%" style="max-height:130px;margin-bottom:0.75rem;display:block" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e2e2e2"/><stop offset="40%" stop-color="#c6c6c6"/><stop offset="100%" stop-color="#8e8e8e"/>
+    </linearGradient>
+    <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b2cede" stop-opacity=".9"/><stop offset="100%" stop-color="#6292ba" stop-opacity=".75"/>
+    </linearGradient>
+    <radialGradient id="tg" cx="45%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#555"/><stop offset="100%" stop-color="#111"/>
+    </radialGradient>
+  </defs>
+  <path d="M14 66 Q14 56 24 54 L58 28 Q74 16 100 14 L200 14 Q226 14 244 28 L272 54 Q282 56 284 66 L284 80 Q284 86 278 86 L22 86 Q14 86 14 80Z" fill="url(#cg)" stroke="#a0a0a0" stroke-width=".8"/>
+  <path d="M64 66 L72 32 Q82 16 102 16 L198 16 Q218 16 228 32 L248 66Z" fill="url(#wg)"/>
+  <rect x="151" y="16" width="5" height="50" fill="#9aa" opacity=".6" rx="1"/>
+  <path d="M24 74 Q149 70 274 74" stroke="#b0b0b0" stroke-width="1" fill="none" opacity=".5"/>
+  <path d="M240 38 L256 32 L258 42 L242 46Z" fill="#ccc" stroke="#aaa" stroke-width=".5"/>
+  <path d="M274 56 L286 62 L284 72 L272 70Z" fill="#fffee0" opacity=".9"/>
+  <path d="M26 56 L14 62 L16 72 L28 70Z" fill="#dd2222" opacity=".85"/>
+  <circle cx="64" cy="88" r="20" fill="url(#tg)"/><circle cx="64" cy="88" r="13" fill="#3a3a3a"/><circle cx="64" cy="88" r="6" fill="#888"/><circle cx="64" cy="88" r="2.5" fill="#aaa"/>
+  <circle cx="220" cy="88" r="20" fill="url(#tg)"/><circle cx="220" cy="88" r="13" fill="#3a3a3a"/><circle cx="220" cy="88" r="6" fill="#888"/><circle cx="220" cy="88" r="2.5" fill="#aaa"/>
+</svg>`;
+
 function lineChart(canvasId, labels, datasets) {
   const ctx = document.getElementById(canvasId);
   if (!ctx) return;
@@ -276,6 +327,23 @@ function lineChart(canvasId, labels, datasets) {
       scales: {
         x: { ticks: { color: "#8b949e" }, grid: { color: "#30363d" } },
         y: { ticks: { color: "#8b949e" }, grid: { color: "#30363d" } },
+      },
+    },
+  });
+}
+
+function barChart(canvasId, labels, data, label, color) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: "bar",
+    data: { labels, datasets: [{ label, data, backgroundColor: color + "70", borderColor: color, borderWidth: 1, borderRadius: 3 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: "#e6edf3" } } },
+      scales: {
+        x: { ticks: { color: "#8b949e" }, grid: { color: "#30363d" } },
+        y: { ticks: { color: "#8b949e" }, grid: { color: "#30363d" }, beginAtZero: true },
       },
     },
   });
@@ -302,6 +370,74 @@ function renderCharts(stats) {
     { label: "Hard brakes", data: daily.map((d) => d.hard_brakes), borderColor: "#f85149", backgroundColor: "rgba(248,81,73,0.2)", tension: 0.3 },
     { label: "Hard accels", data: daily.map((d) => d.hard_accels), borderColor: "#bc8cff", backgroundColor: "rgba(188,140,255,0.2)", tension: 0.3 },
   ]);
+
+  // Cumulative miles
+  let cum = 0;
+  lineChart("cumMilesChart", labels, [{
+    label: "Cumulative miles",
+    data: daily.map((d) => { cum += d.miles; return Math.round(cum * 10) / 10; }),
+    borderColor: "#58a6ff", backgroundColor: "rgba(88,166,255,0.12)", tension: 0.2, fill: true,
+  }]);
+
+  // Avg speed
+  lineChart("avgSpeedChart", labels, [{
+    label: "Avg mph",
+    data: daily.map((d) => d.avg_mph ?? null),
+    borderColor: "#3fb950", backgroundColor: "rgba(63,185,80,0.15)", tension: 0.3, fill: true, spanGaps: false,
+  }]);
+
+  // MPG
+  lineChart("mpgChart", labels, [{
+    label: "MPG",
+    data: daily.map((d) => d.fuel > 0 ? Math.round(d.miles / d.fuel * 10) / 10 : null),
+    borderColor: "#d29922", backgroundColor: "rgba(210,153,34,0.15)", tension: 0.3, fill: true, spanGaps: false,
+  }]);
+
+  // Idle %
+  lineChart("idlePctChart", labels, [{
+    label: "Idle %",
+    data: daily.map((d) => d.duration_min > 0 ? Math.round(d.idle_min / d.duration_min * 100 * 10) / 10 : null),
+    borderColor: "#bc8cff", backgroundColor: "rgba(188,140,255,0.15)", tension: 0.3, fill: true, spanGaps: false,
+  }]);
+}
+
+function renderPatterns(trips) {
+  const section = document.getElementById("patterns-section");
+  if (!section || !trips.length) { if (section) section.style.display = "none"; return; }
+
+  const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dowTrips = new Array(7).fill(0);
+  const hodTrips = new Array(24).fill(0);
+  const monthlyMiles = new Map();
+
+  // Trip distance buckets (miles): 0-2, 2-5, 5-10, 10-20, 20-50, 50+
+  const distBuckets = [0, 0, 0, 0, 0, 0];
+  const distLabels = ["0–2 mi", "2–5 mi", "5–10 mi", "10–20 mi", "20–50 mi", "50+ mi"];
+
+  for (const t of trips) {
+    const start = t.startTime;
+    if (start) {
+      const d = new Date(start);
+      dowTrips[d.getDay()]++;
+      hodTrips[d.getHours()]++;
+      const ym = start.slice(0, 7);
+      monthlyMiles.set(ym, (monthlyMiles.get(ym) || 0) + (t.distance || 0));
+    }
+    const mi = t.distance || 0;
+    if (mi < 2) distBuckets[0]++;
+    else if (mi < 5) distBuckets[1]++;
+    else if (mi < 10) distBuckets[2]++;
+    else if (mi < 20) distBuckets[3]++;
+    else if (mi < 50) distBuckets[4]++;
+    else distBuckets[5]++;
+  }
+
+  barChart("dowChart", DOW, dowTrips, "Trips by day of week", "#58a6ff");
+  barChart("hodChart", Array.from({ length: 24 }, (_, i) => `${i}:00`), hodTrips, "Trips by hour of day", "#3fb950");
+
+  const months = [...monthlyMiles.keys()].sort();
+  barChart("monthlyMilesChart", months, months.map((m) => Math.round(monthlyMiles.get(m))), "Miles by month", "#d29922");
+  barChart("tripDistChart", distLabels, distBuckets, "Trip distance distribution", "#bc8cff");
 }
 
 function renderDaily(stats) {
@@ -440,6 +576,7 @@ async function renderDashboard(key) {
   renderVehicles(vehicles.vehicles || []);
   initMap(trips.trips || [], vehicles.vehicles || []);
   renderCharts(stats);
+  renderPatterns(trips.trips || []);
   renderDaily(stats);
   renderHistory(history.history || []);
   renderTrips(trips.trips || []);
