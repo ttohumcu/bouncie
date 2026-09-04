@@ -310,15 +310,15 @@ function renderVehicles(vehicles) {
     const el = document.createElement("div");
     el.className = "vehicle-card";
     el.innerHTML = `
+      <div class="vehicle-card-photo">
+        <img src="assets/car.png" alt="Vehicle" />
+      </div>
       <div class="vehicle-card-header">
         <div class="vehicle-card-info">
           <div class="vehicle-name">${[year, make, name].filter(Boolean).join(" ") || displayName}</div>
           <div class="vehicle-badges">${milStatus}${running}</div>
           <div class="vehicle-vin">VIN: ${v.vin || "—"}</div>
           ${dtcHtml}
-        </div>
-        <div class="vehicle-card-photo">
-          <img src="assets/car.png" alt="Vehicle" />
         </div>
       </div>
       <div class="vehicle-card-stats">
