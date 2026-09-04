@@ -22,7 +22,7 @@
     </div>
 
     <nav id="top-nav">
-      <a href="#summary">Summary</a>
+      <a href="#summary-section">Summary</a>
       <a href="#vehicles-section">Vehicles</a>
       <a href="#map-section">Map</a>
       <a href="#charts-section">Charts</a>
@@ -37,7 +37,18 @@
       <p id="updated">Loading…</p>
     </header>
 
-    <section id="summary" class="grid"></section>
+    <section id="summary-section">
+      <div class="section-header-row">
+        <h2>Summary</h2>
+        <div class="time-range-btns">
+          <button class="trb" data-range="today">Today</button>
+          <button class="trb" data-range="7d">7 Days</button>
+          <button class="trb" data-range="30d">30 Days</button>
+          <button class="trb active" data-range="all">All Time</button>
+        </div>
+      </div>
+      <div id="summary" class="grid"></div>
+    </section>
 
     <section id="vehicles-section">
       <h2>Vehicles (current)</h2>

@@ -1,16 +1,20 @@
 :root {
-  --bg: #0d1117;
-  --panel: #161b22;
-  --panel2: #1c2128;
-  --border: #30363d;
-  --text: #e6edf3;
-  --muted: #8b949e;
-  --accent: #58a6ff;
-  --good: #3fb950;
-  --warn: #d29922;
-  --bad: #f85149;
+  --bg: #060b12;
+  --panel: #0c1420;
+  --panel2: #101a28;
+  --border: #1a2535;
+  --text: #ddeeff;
+  --muted: #5f80a0;
+  --accent: #00e5ff;
+  --accent2: #7b2dff;
+  --good: #00ff88;
+  --warn: #ffaa00;
+  --bad: #ff2d78;
   --radius: 10px;
-  --shadow: 0 2px 8px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.03);
+  --shadow: 0 2px 12px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
+  --glow-accent: 0 0 12px rgba(0,229,255,0.35);
+  --glow-good:   0 0 10px rgba(0,255,136,0.35);
+  --glow-bad:    0 0 10px rgba(255,45,120,0.35);
 }
 
 * { box-sizing: border-box; }
@@ -43,7 +47,7 @@ html { scroll-behavior: smooth; }
   border-bottom: 2px solid transparent;
   transition: color 0.15s, border-color 0.15s;
 }
-#top-nav a:hover { color: var(--text); border-bottom-color: var(--accent); }
+#top-nav a:hover { color: var(--text); border-bottom-color: var(--accent); text-shadow: var(--glow-accent); }
 
 /* ── Layout shells ─────────────────────────────────────────────────────── */
 header, section, footer {
@@ -77,6 +81,7 @@ h2::before {
   background: var(--accent);
   border-radius: 2px;
   flex-shrink: 0;
+  box-shadow: var(--glow-accent);
 }
 section > .sub {
   margin: -0.5rem 0 1rem;
@@ -114,6 +119,8 @@ section > .sub {
   margin-top: 0.2rem;
   letter-spacing: -0.02em;
   line-height: 1.1;
+  color: var(--accent);
+  text-shadow: var(--glow-accent);
 }
 .card .sub { color: var(--muted); font-size: 0.82rem; margin-top: 0.3rem; }
 
@@ -238,9 +245,9 @@ tbody tr:hover { background: rgba(255,255,255,0.02); }
   font-weight: 600;
   letter-spacing: 0.02em;
 }
-.badge.ok  { background: rgba(63,185,80,0.12);  color: var(--good); border: 1px solid rgba(63,185,80,0.25); }
-.badge.warn{ background: rgba(210,153,34,0.12); color: var(--warn); border: 1px solid rgba(210,153,34,0.25); }
-.badge.bad { background: rgba(248,81,73,0.12);  color: var(--bad);  border: 1px solid rgba(248,81,73,0.25); }
+.badge.ok  { background: rgba(0,255,136,0.08);  color: var(--good); border: 1px solid rgba(0,255,136,0.3);  box-shadow: 0 0 6px rgba(0,255,136,0.2); }
+.badge.warn{ background: rgba(255,170,0,0.08);  color: var(--warn); border: 1px solid rgba(255,170,0,0.3);  box-shadow: 0 0 6px rgba(255,170,0,0.2); }
+.badge.bad { background: rgba(255,45,120,0.08); color: var(--bad);  border: 1px solid rgba(255,45,120,0.3); box-shadow: 0 0 6px rgba(255,45,120,0.2); }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -321,12 +328,59 @@ tbody tr.row-active { background: rgba(248,81,73,0.1) !important; }
 .auth-card button {
   width: 100%; padding: 0.7rem;
   background: var(--accent);
-  color: #fff; border: none; border-radius: 7px;
-  font-size: 1rem; font-weight: 600; cursor: pointer;
-  transition: opacity 0.15s;
+  color: #000; border: none; border-radius: 7px;
+  font-size: 1rem; font-weight: 700; cursor: pointer;
+  transition: opacity 0.15s, box-shadow 0.15s;
+  box-shadow: var(--glow-accent);
 }
 .auth-card button:hover { opacity: 0.88; }
 #auth-error { color: var(--bad); font-size: 0.85rem; margin: 0.75rem 0 0; display: none; }
+
+/* ── Section header row with time-range buttons ────────────────────────── */
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.6rem;
+  margin-bottom: 1rem;
+}
+.section-header-row h2 {
+  margin: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.time-range-btns {
+  display: flex;
+  gap: 0.2rem;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.2rem;
+}
+.trb {
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  border-radius: 6px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+.trb:hover { color: var(--text); }
+.trb.active {
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(0,229,255,0.4);
+}
 
 /* ── Footer ────────────────────────────────────────────────────────────── */
 footer {

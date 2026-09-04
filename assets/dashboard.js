@@ -196,48 +196,83 @@ function attachDateFilters(section) {
 
 // ── Render functions ─────────────────────────────────────────────────────────
 
-function renderSummary(stats) {
+let _statsCache = null;
+
+function renderSummaryForRange(stats, range) {
   const root = document.getElementById("summary");
-  const t = stats.totals || {};
-  const hasTrips = (t.trips_all || 0) > 0;
-  if (!hasTrips) {
-    root.appendChild(noDataBanner("No trip history yet — will populate once the device records trips."));
+  root.innerHTML = "";
+  const daily = stats.daily || [];
+  const today = new Date().toISOString().slice(0, 10);
+
+  let days;
+  if (range === "today") {
+    days = daily.filter(d => d.date === today);
+  } else if (range === "7d") {
+    const cutoff = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+    days = daily.filter(d => d.date >= cutoff);
+  } else if (range === "30d") {
+    const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+    days = daily.filter(d => d.date >= cutoff);
+  } else {
+    days = daily;
+  }
+
+  const sum = (f) => days.reduce((s, d) => s + (d[f] || 0), 0);
+  const totalTrips = sum("trips");
+  const totalMiles = sum("miles");
+  const totalFuel  = sum("fuel");
+  const totalIdle  = sum("idle_min");
+
+  if (days.length === 0 || totalTrips === 0) {
+    root.appendChild(noDataBanner(range === "today" ? "No trips recorded today." : "No trips in this period."));
     return;
   }
+
+  const avgMpg  = totalFuel > 0 ? totalMiles / totalFuel : null;
+  const bestDay = days.reduce((b, d) => d.miles > b.miles ? d : b, { miles: 0, date: "" });
+
   root.append(
-    card("Trips (all-time)", fmtNum(t.trips_all, 0), `${fmtNum(t.trips_7d, 0)} in last 7d`),
-    card("Miles (all-time)", fmtNum(t.miles_all), `${fmtNum(t.miles_7d)} in last 7d`),
-    card("Fuel (all-time)", `${fmtNum(t.fuel_all, 2)} gal`, `${fmtNum(t.fuel_7d, 2)} gal in last 7d`),
-    card("Idle (all-time)", `${fmtNum(t.idle_all, 0)} min`, `${fmtNum(t.idle_7d, 0)} min in last 7d`),
-    card("Hard events (all-time)", `${fmtNum(t.hard_brakes_all, 0)} / ${fmtNum(t.hard_accels_all, 0)}`, "brakes / accels"),
+    card("Trips", fmtNum(totalTrips, 0), `across ${days.length} day${days.length !== 1 ? "s" : ""}`),
+    card("Miles", fmtNum(totalMiles), `avg ${fmtNum(totalMiles / days.length)} / day`),
+    card("Fuel used", `${fmtNum(totalFuel, 2)} gal`, "consumed"),
+    card("Idle time", `${fmtNum(Math.round(totalIdle), 0)} min`, "engine idle"),
+    card("Hard events", `${fmtNum(sum("hard_brakes"), 0)} / ${fmtNum(sum("hard_accels"), 0)}`, "brakes / accels"),
   );
 
-  // Derived stats computed client-side
-  const daily = stats.daily || [];
-  if (daily.length > 0) {
-    const avgMpg = t.fuel_all > 0 ? Math.round(t.miles_all / t.fuel_all * 10) / 10 : null;
-    const avgMilesPerDay = Math.round(t.miles_all / daily.length * 10) / 10;
-    const bestDay = daily.reduce((b, d) => d.miles > b.miles ? d : b, { miles: 0, date: "" });
+  if (avgMpg != null) root.append(card("Avg MPG", fmtNum(avgMpg, 1), "miles per gallon"));
+  if (bestDay.miles > 0) root.append(card("Best day", `${fmtNum(bestDay.miles)} mi`, bestDay.date));
 
-    let maxStreak = 0, curStreak = 0, prevDate = null;
-    for (const d of daily) {
-      if (prevDate) {
-        const diff = Math.round((new Date(d.date) - new Date(prevDate)) / 86400000);
-        curStreak = diff === 1 ? curStreak + 1 : 1;
+  if (range === "all" && days.length > 1) {
+    let maxStreak = 0, cur = 0, prev = null;
+    for (const d of days) {
+      if (prev) {
+        const diff = Math.round((new Date(d.date) - new Date(prev)) / 86400000);
+        cur = diff === 1 ? cur + 1 : 1;
       } else {
-        curStreak = 1;
+        cur = 1;
       }
-      if (curStreak > maxStreak) maxStreak = curStreak;
-      prevDate = d.date;
+      if (cur > maxStreak) maxStreak = cur;
+      prev = d.date;
     }
-
-    if (avgMpg != null) root.append(card("Avg MPG", fmtNum(avgMpg, 1), "miles per gallon"));
-    root.append(
-      card("Avg miles / drive day", fmtNum(avgMilesPerDay), `over ${daily.length} days`),
-      card("Longest streak", `${maxStreak} day${maxStreak !== 1 ? "s" : ""}`, "consecutive days with trips"),
-    );
-    if (bestDay.miles > 0) root.append(card("Best single day", `${fmtNum(bestDay.miles)} mi`, bestDay.date));
+    root.append(card("Longest streak", `${maxStreak} day${maxStreak !== 1 ? "s" : ""}`, "consecutive days with trips"));
   }
+}
+
+function renderSummary(stats) {
+  _statsCache = stats;
+  const hasTrips = ((stats.totals || {}).trips_all || 0) > 0;
+  if (!hasTrips) {
+    document.getElementById("summary").appendChild(noDataBanner("No trip history yet — will populate once the device records trips."));
+    return;
+  }
+  document.querySelectorAll(".trb").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".trb").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderSummaryForRange(_statsCache, btn.dataset.range);
+    });
+  });
+  renderSummaryForRange(stats, "all");
 }
 
 function renderVehicles(vehicles) {
