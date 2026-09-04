@@ -264,7 +264,8 @@ function renderVehicles(vehicles) {
     const lastSeen = fmtDate(stats.lastUpdated);
     const lat = loc.lat ?? loc.latitude;
     const lon = loc.lon ?? loc.longitude;
-    const mapLink = lat && lon ? `<a href="https://www.google.com/maps/search/?api=1&query=${lat},${lon}" target="_blank" rel="noopener">View on map</a>` : "";
+    const mapUrl = lat && lon ? `https://www.google.com/maps/search/?api=1&query=${lat},${lon}` : "";
+    const mapLink = mapUrl ? `<a href="${mapUrl}" target="_blank" rel="noopener">View on map</a>` : "";
 
     const dtcList = mil.qualifiedDtcList || [];
     const dtcHtml = dtcList.length
@@ -272,19 +273,41 @@ function renderVehicles(vehicles) {
       : "";
 
     const el = document.createElement("div");
-    el.className = "card";
+    el.className = "vehicle-card";
     el.innerHTML = `
-      <img src="assets/car.png" alt="Vehicle" style="width:100%;max-height:140px;object-fit:contain;margin-bottom:0.75rem;display:block;border-radius:6px;" />
-      <div class="label">${displayName} ${milStatus} ${running}</div>
-      <div class="value">${[year, make, name].filter(Boolean).join(" ")}</div>
-      <div class="sub">VIN: ${v.vin || "—"}</div>
-      <hr style="border-color:var(--border);margin:0.75rem 0;" />
-      <div class="sub">Odometer: ${odo}</div>
-      <div class="sub">Fuel: ${fuel}</div>
-      <div class="sub">Speed: ${speed} · Heading: ${heading}</div>
-      <div class="sub">Last update: ${lastSeen}</div>
-      ${dtcHtml}
-      <div class="sub">${mapLink}</div>
+      <div class="vehicle-card-header">
+        <div class="vehicle-card-info">
+          <div class="vehicle-name">${[year, make, name].filter(Boolean).join(" ") || displayName}</div>
+          <div class="vehicle-badges">${milStatus}${running}</div>
+          <div class="vehicle-vin">VIN: ${v.vin || "—"}</div>
+          ${dtcHtml}
+        </div>
+        <div class="vehicle-card-photo">
+          <img src="assets/car.png" alt="Vehicle" />
+        </div>
+      </div>
+      <div class="vehicle-card-stats">
+        <div class="vehicle-stat">
+          <div class="vehicle-stat-label">Odometer</div>
+          <div class="vehicle-stat-value">${odo}</div>
+        </div>
+        <div class="vehicle-stat">
+          <div class="vehicle-stat-label">Fuel</div>
+          <div class="vehicle-stat-value">${fuel}</div>
+        </div>
+        <div class="vehicle-stat">
+          <div class="vehicle-stat-label">Speed</div>
+          <div class="vehicle-stat-value">${speed}</div>
+        </div>
+        <div class="vehicle-stat">
+          <div class="vehicle-stat-label">Heading</div>
+          <div class="vehicle-stat-value">${heading}</div>
+        </div>
+      </div>
+      <div class="vehicle-card-footer">
+        <span class="sub">Last update: ${lastSeen}</span>
+        ${mapUrl ? `<a href="${mapUrl}" target="_blank" rel="noopener" style="font-size:0.82rem;">View on map →</a>` : ""}
+      </div>
     `;
     root.appendChild(el);
   }
