@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Adam's Bouncie</title>
     <link rel="stylesheet" href="assets/styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="assets/dashboard.js" defer></script>
   </head>
@@ -31,6 +33,12 @@
       <div id="vehicles" class="grid"></div>
     </section>
 
+    <section id="map-section">
+      <h2>Trip routes map</h2>
+      <p class="sub">All recorded routes. Click any highlighted line or trip row to zoom into that drive.</p>
+      <div id="trip-map"></div>
+    </section>
+
     <section id="charts-section">
       <h2>All-time daily activity</h2>
       <div class="charts">
@@ -49,7 +57,7 @@
           <thead>
             <tr>
               <th>Date</th><th>Trips</th><th>Miles</th><th>Drive time</th>
-              <th>Fuel</th><th>Top mph</th><th>Hard brakes</th><th>Hard accels</th>
+              <th>Fuel</th><th>Avg mph</th><th>Top mph</th><th>Idle</th><th>Hard brakes</th><th>Hard accels</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -81,7 +89,8 @@
           <thead>
             <tr>
               <th>Start</th><th>End</th><th>Distance</th><th>Duration</th>
-              <th>Top mph</th><th>Fuel</th><th>Hard brakes</th><th>Hard accel</th>
+              <th>Avg mph</th><th>Top mph</th><th>Idle</th><th>Fuel</th>
+              <th>Hard brakes</th><th>Hard accel</th><th>Odometer</th>
             </tr>
           </thead>
           <tbody></tbody>

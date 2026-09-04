@@ -38,7 +38,6 @@ async function deriveKey(password, saltB64) {
   );
 }
 
-// Derive key from salt in last_updated.json, verify by decrypting vehicles.json.enc.
 async function tryUnlock(password, saltB64) {
   const key = await deriveKey(password, saltB64);
   // AES-GCM throws on wrong password (auth tag mismatch)
@@ -60,6 +59,80 @@ function noDataBanner(message) {
   return el;
 }
 
+// ── Map state ────────────────────────────────────────────────────────────────
+let _map = null;
+let _routeLayerMap = new Map(); // transactionId → L.Polyline
+let _activeLayer = null;
+let _activeRow = null;
+
+function focusTrip(txId, layer, row) {
+  if (_activeLayer) _activeLayer.setStyle({ color: "#58a6ff", weight: 2, opacity: 0.4 });
+  if (_activeRow) _activeRow.classList.remove("row-active");
+
+  if (layer) {
+    layer.setStyle({ color: "#f85149", weight: 4, opacity: 1 });
+    layer.bringToFront();
+    _map.fitBounds(layer.getBounds().pad(0.25));
+  }
+  if (row) {
+    row.classList.add("row-active");
+    row.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  _activeLayer = layer || null;
+  _activeRow = row || null;
+}
+
+function initMap(trips, vehicles) {
+  const mapEl = document.getElementById("trip-map");
+  if (!mapEl || typeof L === "undefined") return;
+
+  _map = L.map("trip-map", { preferCanvas: true });
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: "abcd",
+    maxZoom: 19,
+  }).addTo(_map);
+
+  const allLatLngs = [];
+
+  for (const t of trips) {
+    const coords = t.gps?.coordinates;
+    if (!coords || coords.length < 2) continue;
+    // GeoJSON stores [lon, lat]; Leaflet wants [lat, lon]
+    const latlngs = coords.map(([lon, lat]) => [lat, lon]);
+    allLatLngs.push(...latlngs);
+
+    const poly = L.polyline(latlngs, { color: "#58a6ff", weight: 2, opacity: 0.4 }).addTo(_map);
+    const txId = t.transactionId;
+    if (txId) _routeLayerMap.set(txId, poly);
+
+    poly.on("click", () => {
+      const row = txId ? document.querySelector(`tr[data-txid="${txId}"]`) : null;
+      focusTrip(txId, poly, row);
+    });
+  }
+
+  // Current vehicle location pins
+  for (const v of vehicles) {
+    const stats = v.stats || {};
+    const loc = stats.location || {};
+    const lat = loc.lat ?? loc.latitude;
+    const lon = loc.lon ?? loc.longitude;
+    if (!lat || !lon) continue;
+    const name = v.nickName || v.imei || "Vehicle";
+    L.circleMarker([lat, lon], {
+      radius: 9, fillColor: "#f85149", color: "#fff", weight: 2, fillOpacity: 1,
+    }).addTo(_map).bindPopup(`<b>${name}</b><br><small>${fmtDate(stats.lastUpdated)}</small>`);
+  }
+
+  if (allLatLngs.length > 0) {
+    _map.fitBounds(allLatLngs, { padding: [20, 20] });
+  }
+}
+
+// ── Render functions ─────────────────────────────────────────────────────────
+
 function renderSummary(stats) {
   const root = document.getElementById("summary");
   const t = stats.totals || {};
@@ -72,6 +145,7 @@ function renderSummary(stats) {
     card("Trips (all-time)", fmtNum(t.trips_all, 0), `${fmtNum(t.trips_7d, 0)} in last 7d`),
     card("Miles (all-time)", fmtNum(t.miles_all), `${fmtNum(t.miles_7d)} in last 7d`),
     card("Fuel (all-time)", `${fmtNum(t.fuel_all, 2)} gal`, `${fmtNum(t.fuel_7d, 2)} gal in last 7d`),
+    card("Idle (all-time)", `${fmtNum(t.idle_all, 0)} min`, `${fmtNum(t.idle_7d, 0)} min in last 7d`),
     card("Hard events (all-time)", `${fmtNum(t.hard_brakes_all, 0)} / ${fmtNum(t.hard_accels_all, 0)}`, "brakes / accels"),
   );
 }
@@ -85,12 +159,13 @@ function renderVehicles(vehicles) {
   for (const v of vehicles) {
     const stats = v.stats || {};
     const loc = stats.location || {};
+    const mil = stats.mil || {};
     const modelObj = v.model || {};
     const make = modelObj.make || "";
     const name = modelObj.name || "";
     const year = modelObj.year || "";
     const displayName = v.nickName || [year, make, name].filter(Boolean).join(" ") || "Vehicle";
-    const milStatus = stats.mil?.milOn ? '<span class="badge bad">MIL ON</span>' : '<span class="badge ok">MIL OK</span>';
+    const milStatus = mil.milOn ? '<span class="badge bad">MIL ON</span>' : '<span class="badge ok">MIL OK</span>';
     const running = stats.isRunning ? '<span class="badge ok">Running</span>' : '<span class="badge warn">Parked</span>';
     const fuel = stats.fuelLevel != null ? `${fmtNum(stats.fuelLevel, 1)}%` : "—";
     const odo = stats.odometer != null ? `${fmtNum(stats.odometer, 0)} mi` : "—";
@@ -101,17 +176,23 @@ function renderVehicles(vehicles) {
     const lon = loc.lon ?? loc.longitude;
     const mapLink = lat && lon ? `<a href="https://www.google.com/maps/search/?api=1&query=${lat},${lon}" target="_blank" rel="noopener">View on map</a>` : "";
 
+    const dtcList = mil.qualifiedDtcList || [];
+    const dtcHtml = dtcList.length
+      ? `<div class="sub dtc-row">DTCs: ${dtcList.map((d) => `<span class="badge bad">${d}</span>`).join(" ")}</div>`
+      : "";
+
     const el = document.createElement("div");
     el.className = "card";
     el.innerHTML = `
       <div class="label">${displayName} ${milStatus} ${running}</div>
       <div class="value">${[year, make, name].filter(Boolean).join(" ")}</div>
-      <div class="sub">Year: ${year || "—"} · Make: ${make || "—"}</div>
+      <div class="sub">VIN: ${v.vin || "—"}</div>
       <hr style="border-color:var(--border);margin:0.75rem 0;" />
       <div class="sub">Odometer: ${odo}</div>
       <div class="sub">Fuel: ${fuel}</div>
       <div class="sub">Speed: ${speed} · Heading: ${heading}</div>
       <div class="sub">Last update: ${lastSeen}</div>
+      ${dtcHtml}
       <div class="sub">${mapLink}</div>
     `;
     root.appendChild(el);
@@ -176,7 +257,9 @@ function renderDaily(stats) {
       <td>${fmtNum(d.miles)} mi</td>
       <td>${fmtNum(d.duration_min, 0)} min</td>
       <td>${fmtNum(d.fuel, 2)} gal</td>
+      <td>${d.avg_mph != null ? fmtNum(d.avg_mph, 1) : "—"}</td>
       <td>${fmtNum(d.max_mph, 0)}</td>
+      <td>${d.idle_min != null ? fmtNum(d.idle_min, 1) + " min" : "—"}</td>
       <td>${fmtNum(d.hard_brakes, 0)}</td>
       <td>${fmtNum(d.hard_accels, 0)}</td>
     `;
@@ -226,17 +309,41 @@ function renderTrips(trips) {
     const dur = start && end ? Math.round((new Date(end) - new Date(start)) / 60000) : null;
     const dist = t.distance ?? t.totalDistance;
     const top = t.maxSpeed ?? t.topSpeed;
+    const avg = t.averageSpeed;
+    const idle = t.totalIdleDuration != null ? Math.round(t.totalIdleDuration / 60) : null;
+    const startOdo = t.startOdometer;
+    const endOdo = t.endOdometer;
+    const odoStr = startOdo != null && endOdo != null
+      ? `${fmtNum(startOdo, 0)}→${fmtNum(endOdo, 0)}`
+      : startOdo != null ? fmtNum(startOdo, 0) : "—";
+    const hasRoute = t.gps?.coordinates?.length >= 2;
+    const txId = t.transactionId || "";
+
     const tr = document.createElement("tr");
+    tr.dataset.txid = txId;
+    if (hasRoute) tr.classList.add("has-route");
     tr.innerHTML = `
       <td>${fmtDate(start)}</td>
       <td>${fmtDate(end)}</td>
       <td>${dist != null ? fmtNum(dist) + " mi" : "—"}</td>
       <td>${dur != null ? dur + " min" : "—"}</td>
+      <td>${avg != null ? fmtNum(avg, 1) : "—"}</td>
       <td>${top != null ? fmtNum(top, 0) : "—"}</td>
+      <td>${idle != null ? idle + " min" : "—"}</td>
       <td>${t.fuelConsumed != null ? fmtNum(t.fuelConsumed, 2) + " gal" : "—"}</td>
       <td>${t.hardBrakingCount ?? 0}</td>
       <td>${t.hardAccelerationCount ?? 0}</td>
+      <td>${odoStr}</td>
     `;
+
+    if (hasRoute && txId) {
+      tr.addEventListener("click", () => {
+        const poly = _routeLayerMap.get(txId);
+        focusTrip(txId, poly, tr);
+        document.getElementById("trip-map")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    }
+
     tbody.appendChild(tr);
   }
 }
@@ -261,12 +368,14 @@ async function renderDashboard(key) {
   document.getElementById("updated").textContent = `Last updated: ${fmtDate(stats.updated_at)}`;
   renderSummary(stats);
   renderVehicles(vehicles.vehicles || []);
+  initMap(trips.trips || [], vehicles.vehicles || []);
   renderCharts(stats);
   renderDaily(stats);
   renderHistory(history.history || []);
   renderTrips(trips.trips || []);
 }
 
+// ── Auth gate ────────────────────────────────────────────────────────────────
 (async () => {
   const gate = document.getElementById("auth-gate");
   const input = document.getElementById("auth-input");
@@ -303,7 +412,6 @@ async function renderDashboard(key) {
     return;
   }
 
-  // Encrypted — check sessionStorage for cached password so user doesn't re-enter on refresh
   const cached = sessionStorage.getItem("bp");
   if (cached) {
     try {

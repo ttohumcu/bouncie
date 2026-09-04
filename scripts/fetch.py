@@ -251,7 +251,7 @@ def compute_stats(vehicles: list[dict], trips: list[dict]) -> dict:
         bucket = by_day.setdefault(day, {
             "miles": 0.0, "trips": 0, "fuel": 0.0,
             "hard_brakes": 0, "hard_accels": 0, "max_mph": 0.0,
-            "duration_min": 0.0,
+            "duration_min": 0.0, "idle_min": 0.0, "_spd_x_dist": 0.0,
         })
         miles = t.get("distance") or t.get("totalDistance") or 0
         bucket["miles"] += float(miles or 0)
@@ -269,12 +269,17 @@ def compute_stats(vehicles: list[dict], trips: list[dict]) -> dict:
                 bucket["duration_min"] += max(0.0, (end_ts - ts).total_seconds() / 60.0)
             except ValueError:
                 pass
+        bucket["idle_min"] += float(t.get("totalIdleDuration") or 0) / 60.0
+        bucket["_spd_x_dist"] += float(t.get("averageSpeed") or 0) * float(miles or 0)
 
     for vals in by_day.values():
         vals["miles"] = round(vals["miles"], 1)
         vals["fuel"] = round(vals["fuel"], 2)
         vals["duration_min"] = round(vals["duration_min"], 1)
         vals["max_mph"] = round(vals["max_mph"], 1)
+        vals["idle_min"] = round(vals["idle_min"], 1)
+        spd_x_dist = vals.pop("_spd_x_dist", 0.0)
+        vals["avg_mph"] = round(spd_x_dist / vals["miles"], 1) if vals["miles"] else 0.0
 
     daily = [{"date": d, **vals} for d, vals in sorted(by_day.items())]
 
@@ -310,6 +315,8 @@ def compute_stats(vehicles: list[dict], trips: list[dict]) -> dict:
             "hard_accels_all": int(sum_field(trips, "hardAccelerationCount")),
             "hard_brakes_30d": int(sum_field(last30, "hardBrakingCount")),
             "hard_accels_30d": int(sum_field(last30, "hardAccelerationCount")),
+            "idle_all": int(sum_field(trips, "totalIdleDuration") / 60),
+            "idle_7d": int(sum_field(last7, "totalIdleDuration") / 60),
         },
         "daily": daily,
         "vehicle_count": len(vehicles),
