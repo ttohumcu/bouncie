@@ -99,7 +99,7 @@ function renderVehicles(vehicles) {
     const lastSeen = fmtDate(stats.lastUpdated);
     const lat = loc.lat ?? loc.latitude;
     const lon = loc.lon ?? loc.longitude;
-    const mapLink = lat && lon ? `<a href="https://maps.google.com/?q=${lat},${lon}" target="_blank" rel="noopener">View on map</a>` : "";
+    const mapLink = lat && lon ? `<a href="https://www.google.com/maps/search/?api=1&query=${lat},${lon}" target="_blank" rel="noopener">View on map</a>` : "";
 
     const el = document.createElement("div");
     el.className = "card";
@@ -196,7 +196,7 @@ function renderHistory(history) {
     const mil = h.milOn === true ? '<span class="badge bad">ON</span>' :
                 h.milOn === false ? '<span class="badge ok">OK</span>' : "—";
     const loc = h.lat && h.lon
-      ? `<a href="https://maps.google.com/?q=${h.lat},${h.lon}" target="_blank" rel="noopener">map</a>`
+      ? `<a href="https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lon}" target="_blank" rel="noopener">map</a>`
       : "—";
     const tr = document.createElement("tr");
     tr.innerHTML = `
