@@ -88,10 +88,10 @@ function initMap(trips, vehicles) {
   if (!mapEl || typeof L === "undefined") return;
 
   _map = L.map("trip-map", { preferCanvas: true });
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: "abcd",
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19,
+    className: "map-tiles-dark",
   }).addTo(_map);
 
   const allLatLngs = [];

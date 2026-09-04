@@ -83,6 +83,11 @@ a { color: var(--accent); }
   background: #1a1f27;
 }
 
+/* Invert OSM tiles to create a dark map without an API key */
+.map-tiles-dark {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) saturate(0.75);
+}
+
 /* Override Leaflet popup colours for dark theme */
 .leaflet-popup-content-wrapper { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
 .leaflet-popup-tip { background: var(--panel); }
