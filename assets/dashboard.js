@@ -274,7 +274,7 @@ function renderVehicles(vehicles) {
     const el = document.createElement("div");
     el.className = "card";
     el.innerHTML = `
-      ${CAR_SVG}
+      <img src="assets/car.png" alt="Vehicle" style="width:100%;max-height:140px;object-fit:contain;margin-bottom:0.75rem;display:block;border-radius:6px;" />
       <div class="label">${displayName} ${milStatus} ${running}</div>
       <div class="value">${[year, make, name].filter(Boolean).join(" ")}</div>
       <div class="sub">VIN: ${v.vin || "—"}</div>
@@ -290,28 +290,6 @@ function renderVehicles(vehicles) {
   }
 }
 
-const CAR_SVG = `<svg viewBox="0 0 300 110" width="100%" style="max-height:130px;margin-bottom:0.75rem;display:block" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#e2e2e2"/><stop offset="40%" stop-color="#c6c6c6"/><stop offset="100%" stop-color="#8e8e8e"/>
-    </linearGradient>
-    <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#b2cede" stop-opacity=".9"/><stop offset="100%" stop-color="#6292ba" stop-opacity=".75"/>
-    </linearGradient>
-    <radialGradient id="tg" cx="45%" cy="35%" r="55%">
-      <stop offset="0%" stop-color="#555"/><stop offset="100%" stop-color="#111"/>
-    </radialGradient>
-  </defs>
-  <path d="M14 66 Q14 56 24 54 L58 28 Q74 16 100 14 L200 14 Q226 14 244 28 L272 54 Q282 56 284 66 L284 80 Q284 86 278 86 L22 86 Q14 86 14 80Z" fill="url(#cg)" stroke="#a0a0a0" stroke-width=".8"/>
-  <path d="M64 66 L72 32 Q82 16 102 16 L198 16 Q218 16 228 32 L248 66Z" fill="url(#wg)"/>
-  <rect x="151" y="16" width="5" height="50" fill="#9aa" opacity=".6" rx="1"/>
-  <path d="M24 74 Q149 70 274 74" stroke="#b0b0b0" stroke-width="1" fill="none" opacity=".5"/>
-  <path d="M240 38 L256 32 L258 42 L242 46Z" fill="#ccc" stroke="#aaa" stroke-width=".5"/>
-  <path d="M274 56 L286 62 L284 72 L272 70Z" fill="#fffee0" opacity=".9"/>
-  <path d="M26 56 L14 62 L16 72 L28 70Z" fill="#dd2222" opacity=".85"/>
-  <circle cx="64" cy="88" r="20" fill="url(#tg)"/><circle cx="64" cy="88" r="13" fill="#3a3a3a"/><circle cx="64" cy="88" r="6" fill="#888"/><circle cx="64" cy="88" r="2.5" fill="#aaa"/>
-  <circle cx="220" cy="88" r="20" fill="url(#tg)"/><circle cx="220" cy="88" r="13" fill="#3a3a3a"/><circle cx="220" cy="88" r="6" fill="#888"/><circle cx="220" cy="88" r="2.5" fill="#aaa"/>
-</svg>`;
 
 function lineChart(canvasId, labels, datasets) {
   const ctx = document.getElementById(canvasId);
