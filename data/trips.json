@@ -1,6 +1,137 @@
 {
   "trips": [
     {
+      "transactionId": "865612071401950-1098-202609",
+      "hardBrakingCount": 0,
+      "hardAccelerationCount": 0,
+      "distance": 0,
+      "gps": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -82.45372,
+            27.25161
+          ],
+          [
+            -82.45376,
+            27.25161
+          ],
+          [
+            -82.45376,
+            27.25159
+          ]
+        ]
+      },
+      "startTime": "2026-09-07T19:00:52.000Z",
+      "endTime": "2026-09-07T19:04:15.000Z",
+      "startOdometer": 42296,
+      "endOdometer": 42296,
+      "averageSpeed": 0,
+      "maxSpeed": 0,
+      "fuelConsumed": 0.019,
+      "timeZone": "-0400",
+      "totalIdleDuration": 193,
+      "imei": "865612071401950"
+    },
+    {
+      "transactionId": "865612071401950-1097-202609",
+      "hardBrakingCount": 0,
+      "hardAccelerationCount": 0,
+      "distance": 0,
+      "gps": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -82.45375,
+            27.25143
+          ],
+          [
+            -82.4538,
+            27.2514
+          ],
+          [
+            -82.45386,
+            27.25143
+          ],
+          [
+            -82.45383,
+            27.25145
+          ],
+          [
+            -82.45382,
+            27.25148
+          ],
+          [
+            -82.45382,
+            27.25148
+          ],
+          [
+            -82.4538,
+            27.25151
+          ],
+          [
+            -82.45379,
+            27.25153
+          ],
+          [
+            -82.45379,
+            27.25155
+          ],
+          [
+            -82.45377,
+            27.25156
+          ],
+          [
+            -82.45376,
+            27.25157
+          ]
+        ]
+      },
+      "startTime": "2026-09-07T18:46:46.000Z",
+      "endTime": "2026-09-07T18:50:17.000Z",
+      "startOdometer": 42296,
+      "endOdometer": 42296,
+      "averageSpeed": 1.8,
+      "maxSpeed": 3.106855,
+      "fuelConsumed": 0.014,
+      "timeZone": "-0400",
+      "totalIdleDuration": 166,
+      "imei": "865612071401950"
+    },
+    {
+      "transactionId": "865612071401950-1096-202609",
+      "hardBrakingCount": 0,
+      "hardAccelerationCount": 0,
+      "distance": 0,
+      "gps": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -82.45367,
+            27.25148
+          ],
+          [
+            -82.45368,
+            27.25148
+          ],
+          [
+            -82.45368,
+            27.25148
+          ]
+        ]
+      },
+      "startTime": "2026-09-07T17:53:38.000Z",
+      "endTime": "2026-09-07T17:55:51.000Z",
+      "startOdometer": 42296,
+      "endOdometer": 42296,
+      "averageSpeed": 0,
+      "maxSpeed": 0,
+      "fuelConsumed": 0.01,
+      "timeZone": "-0400",
+      "totalIdleDuration": 123,
+      "imei": "865612071401950"
+    },
+    {
       "transactionId": "865612071401950-1095-202609",
       "hardBrakingCount": 0,
       "hardAccelerationCount": 0,
@@ -778471,5 +778602,5 @@
       "imei": "865612071401950"
     }
   ],
-  "updated_at": "2026-09-07T16:46:06.783526+00:00"
+  "updated_at": "2026-09-07T22:21:22.243717+00:00"
 }
