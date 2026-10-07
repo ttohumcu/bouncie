@@ -8,16 +8,16 @@
       "make": "Honda",
       "model": "Accord",
       "year": 2023,
-      "odometer": 44108.6,
-      "fuelLevel": 26.90807211457946,
+      "odometer": 44122.9,
+      "fuelLevel": 93.33333333333334,
       "isRunning": false,
       "battery": "normal",
       "milOn": false,
       "speed": 0,
-      "heading": 271,
-      "lat": 27.251587,
-      "lon": -82.453706,
-      "lastUpdated": "2026-10-06T23:01:42.000Z"
+      "heading": 5,
+      "lat": 27.251555,
+      "lon": -82.453792,
+      "lastUpdated": "2026-10-07T16:44:55.000Z"
     },
     {
       "date": "2026-10-06",
@@ -2984,5 +2984,5 @@
       "lastUpdated": "2026-05-04T22:14:40.000Z"
     }
   ],
-  "updated_at": "2026-10-07T10:39:03.988707+00:00"
+  "updated_at": "2026-10-07T18:03:29.699011+00:00"
 }
