@@ -1,20 +1,20 @@
 {
   "totals": {
-    "trips_all": 1136,
-    "trips_7d": 30,
+    "trips_all": 1137,
+    "trips_7d": 28,
     "trips_30d": 193,
-    "miles_all": 9945.3,
-    "miles_7d": 281.2,
-    "miles_30d": 1862.2,
-    "fuel_all": 253.02,
-    "fuel_7d": 7.71,
+    "miles_all": 9947.5,
+    "miles_7d": 272.7,
+    "miles_30d": 1861.8,
+    "fuel_all": 253.09,
+    "fuel_7d": 7.48,
     "fuel_30d": 50.71,
     "hard_brakes_all": 346,
     "hard_accels_all": 364,
     "hard_brakes_30d": 67,
     "hard_accels_30d": 75,
     "idle_all": 4937,
-    "idle_7d": 86
+    "idle_7d": 79
   },
   "daily": [
     {
@@ -2227,17 +2227,17 @@
     },
     {
       "date": "2026-10-18",
-      "miles": 79.7,
-      "trips": 2,
-      "fuel": 2.07,
+      "miles": 81.9,
+      "trips": 3,
+      "fuel": 2.14,
       "hard_brakes": 3,
       "hard_accels": 2,
       "max_mph": 88.2,
-      "duration_min": 81.6,
-      "idle_min": 4.8,
-      "avg_mph": 64.7
+      "duration_min": 86.8,
+      "idle_min": 5.0,
+      "avg_mph": 63.6
     }
   ],
   "vehicle_count": 1,
-  "updated_at": "2026-10-18T08:22:44.328054+00:00"
+  "updated_at": "2026-10-18T15:00:23.596157+00:00"
 }
