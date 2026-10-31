@@ -17,7 +17,7 @@
           "lat": 27.272316,
           "lon": -82.471947,
           "heading": 295,
-          "address": null
+          "address": "5640 Jason Lee Pl, Sarasota, FL 34233, USA"
         },
         "fuelLevel": 66.58771624748675,
         "isRunning": false,
@@ -34,5 +34,5 @@
       }
     }
   ],
-  "updated_at": "2026-10-31T16:26:15.488876+00:00"
+  "updated_at": "2026-10-31T22:53:50.898730+00:00"
 }
