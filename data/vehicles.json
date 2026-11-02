@@ -10,14 +10,14 @@
       "vin": "1HGCY2F56PA059578",
       "imei": "865612071401950",
       "stats": {
-        "localTimeZone": "-0400",
-        "lastUpdated": "2026-10-30T19:20:32.000Z",
-        "odometer": 44936.3,
+        "localTimeZone": "-0500",
+        "lastUpdated": "2026-11-02T16:28:43.000Z",
+        "odometer": 44936.9,
         "location": {
-          "lat": 27.272316,
-          "lon": -82.471947,
-          "heading": 295,
-          "address": "5640 Jason Lee Pl, Sarasota, FL 34233, USA"
+          "lat": 27.272344,
+          "lon": -82.471742,
+          "heading": 67,
+          "address": "4883 Clark Rd, Sarasota, FL 34233, USA"
         },
         "fuelLevel": 66.58771624748675,
         "isRunning": false,
@@ -34,5 +34,5 @@
       }
     }
   ],
-  "updated_at": "2026-11-02T11:45:26.927411+00:00"
+  "updated_at": "2026-11-02T20:57:26.849061+00:00"
 }
